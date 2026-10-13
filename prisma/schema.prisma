@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+}
+
+/// Lore categories, tuned for 40k worldbuilding. Extend freely.
+enum ArticleCategory {
+  HISTORY
+  FACTION
+  CHAPTER
+  REGIMENT
+  CHARACTER
+  LOCATION
+  EVENT
+  BATTLE
+  ARTIFACT
+  XENOS
+  HERETIC
+  RELIGION
+  TECHNOLOGY
+  OTHER
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  role         Role     @default(EDITOR)
+  createdAt    DateTime @default(now())
+  worlds       World[]
+  media        Media[]
+}
+
+/// A custom setting inside the 40k universe (e.g. Cerulean). Every piece of
+/// content belongs to exactly one world so multiple creators can coexist.
+model World {
+  id           String       @id @default(cuid())
+  slug         String       @unique
+  name         String
+  tagline      String?
+  summary      String?      @db.Text
+  published    Boolean      @default(false)
+  ownerId      String
+  owner        User         @relation(fields: [ownerId], references: [id])
+  coverImageId String?
+  coverImage   Media?       @relation("WorldCover", fields: [coverImageId], references: [id], onDelete: SetNull)
+  articles     Article[]
+  systems      StarSystem[]
+  media        Media[]      @relation("WorldMedia")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Article {
+  id           String          @id @default(cuid())
+  worldId      String
+  world        World           @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  slug         String
+  title        String
+  category     ArticleCategory @default(OTHER)
+  summary      String?
+  body         String          @default("") @db.Text
+  tags         String[]        @default([])
+  published    Boolean         @default(false)
+  coverImageId String?
+  coverImage   Media?          @relation("ArticleCover", fields: [coverImageId], references: [id], onDelete: SetNull)
+  systemId     String?
+  system       StarSystem?     @relation(fields: [systemId], references: [id], onDelete: SetNull)
+  planetId     String?
+  planet       Planet?         @relation(fields: [planetId], references: [id], onDelete: SetNull)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@unique([worldId, slug])
+  @@index([worldId, category])
+}
+
+/// A star system. x/y/z are galactic-map coordinates for the future star map.
+model StarSystem {
+  id              String    @id @default(cuid())
+  worldId         String
+  world           World     @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  slug            String
+  name            String
+  starType        String?
+  segmentum       String?
+  description     String?   @db.Text
+  x               Float     @default(0)
+  y               Float     @default(0)
+  z               Float     @default(0)
+  published       Boolean   @default(false)
+  /// Visual theme for this system's public pages (see src/lib/theme.ts).
+  theme           Json?
+  backdropImageId String?
+  backdropImage   Media?    @relation("SystemBackdrop", fields: [backdropImageId], references: [id], onDelete: SetNull)
+  planets         Planet[]
+  articles        Article[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([worldId, slug])
+}
+
+model Planet {
+  id             String     @id @default(cuid())
+  systemId       String
+  system         StarSystem @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  slug           String
+  name           String
+  /// Imperial classification, e.g. "Hive World", "Forge World", "Death World".
+  classification String?
+  description    String?    @db.Text
+  orbitIndex     Int        @default(0)
+  population     String?
+  titheGrade     String?
+  /// Parameters for the future procedural 3D planet renderer (seed, palette,
+  /// water level, cloud cover, etc). Schema intentionally left open.
+  genParams      Json?
+  published      Boolean    @default(false)
+  coverImageId   String?
+  coverImage     Media?     @relation("PlanetCover", fields: [coverImageId], references: [id], onDelete: SetNull)
+  articles       Article[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@unique([systemId, slug])
+}
+
+model Media {
+  id              String       @id @default(cuid())
+  worldId         String?
+  world           World?       @relation("WorldMedia", fields: [worldId], references: [id], onDelete: SetNull)
+  /// Storage key (filename inside UPLOAD_DIR, or object key once on S3/R2).
+  key             String       @unique
+  originalName    String
+  mimeType        String
+  size            Int
+  alt             String?
+  uploadedById    String
+  uploadedBy      User         @relation(fields: [uploadedById], references: [id])
+  createdAt       DateTime     @default(now())
+  worldCovers     World[]      @relation("WorldCover")
+  articleCovers   Article[]    @relation("ArticleCover")
+  planetCovers    Planet[]     @relation("PlanetCover")
+  systemBackdrops StarSystem[] @relation("SystemBackdrop")
+}

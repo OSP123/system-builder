@@ -1,0 +1,3 @@
+I'd like to build a web application that allows me to create lore for my custom world of Cerulean in the Warhammer 40k universe. I'd also like to have the application have an admin tool that acts as a CMS. This would allow me to easily enter information and pictures to the web application. Furthermore, this would allow others to create their own custom worlds in Warhammer 40k as well. Eventually, I'd like an interactive star map that allows people to then go to their solar system and planet. I'd also like to eventually have the capability to then create my own revolving and interactive planet that is generated based on parameters I pass in. 
+
+This application would be public, but the CMS would require admin credentials for now.

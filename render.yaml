@@ -1,0 +1,50 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+#
+# FREE TIER configuration. Limits to know about:
+#   - No persistent disk: uploaded images are lost on every deploy/restart.
+#     The CMS shows a warning while UPLOADS_EPHEMERAL=true.
+#   - Free Postgres expires 30 days after creation.
+#   - The web service sleeps after 15 idle minutes (slow first request).
+# To upgrade: set plan to starter, add the disk block below, set
+# UPLOAD_DIR=/var/data/uploads, remove UPLOADS_EPHEMERAL, and set the
+# database plan to basic-256mb.
+services:
+  - type: web
+    name: cerulean
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm ci && npx prisma generate && npm run build
+    # Free instances have no pre-deploy step, so migrations, the admin seed and
+    # the lore import (all idempotent) run on boot before the server starts.
+    startCommand: npm run start:render
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cerulean-db
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: UPLOAD_DIR
+        value: ./uploads
+      - key: UPLOADS_EPHEMERAL
+        value: "true"
+    # Paid plans only:
+    # disk:
+    #   name: uploads
+    #   mountPath: /var/data
+    #   sizeGB: 1
+
+databases:
+  - name: cerulean-db
+    plan: free
+    region: oregon
+    databaseName: cerulean
+    user: cerulean

@@ -1,0 +1,18 @@
+import { defineConfig } from "@playwright/test";
+
+const PORT = 3100;
+
+export default defineConfig({
+  testDir: "e2e",
+  timeout: 60_000,
+  workers: 1,
+  globalSetup: "./e2e/global-setup.ts",
+  use: { baseURL: `http://localhost:${PORT}`, screenshot: "only-on-failure" },
+  webServer: {
+    // Runs the production build against the test database.
+    command: `node --env-file=.env.test node_modules/next/dist/bin/next start -p ${PORT}`,
+    url: `http://localhost:${PORT}`,
+    reuseExistingServer: false,
+    timeout: 60_000,
+  },
+});

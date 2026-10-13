@@ -1,103 +1,63 @@
-import Image from "next/image";
+import Link from "next/link";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
+import { MediaImage } from "@/components/MediaImage";
+import { Emblem } from "@/components/ornament/Emblem";
+import { InkSplatter } from "@/components/ornament/InkSplatter";
+import { SkullDivider } from "@/components/ornament/Skull";
+import { getPublishedWorlds } from "@/lib/queries";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const worlds = await getPublishedWorlds();
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen">
+      <SiteHeader />
+      <main className="mx-auto max-w-6xl px-4">
+        <section className="relative pb-14 pt-16 text-center">
+          <InkSplatter seed={7} className="pointer-events-none absolute left-1/2 top-4 -z-10 h-[420px] w-[420px] -translate-x-1/2 text-blood/40" />
+          <Emblem className="mx-auto h-28 w-auto" />
+          <p className="mt-6 font-mono text-xs uppercase tracking-[0.45em] text-blood-bright">+++ Archives of the 41st Millennium +++</p>
+          <h1 className="gothic-title mt-5 text-6xl sm:text-8xl">Worlds Beyond the Astronomican</h1>
+          <p className="mx-auto mt-6 max-w-2xl font-serif text-xl italic text-ash">
+            Chronicles, star charts and sealed records of the forgotten worlds, kept in the grim darkness of the far future.
+          </p>
+        </section>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+        <SkullDivider className="mb-12" />
+
+        {worlds.length === 0 ? (
+          <p className="text-center font-mono text-ash">+++ No worlds have been unsealed +++</p>
+        ) : (
+          <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {worlds.map((w) => (
+              <li key={w.id}>
+                <Link href={`/w/${w.slug}`} className="gothic-frame group block p-2">
+                  <div className="aspect-[16/9] overflow-hidden border border-line bg-hull">
+                    {w.coverImage ? (
+                      <MediaImage media={w.coverImage} className="grim-image h-full w-full object-cover" />
+                    ) : (
+                      <div className="relative flex h-full items-center justify-center overflow-hidden bg-[radial-gradient(ellipse_at_center,rgba(59,40,22,0.6),transparent_75%)]">
+                        <InkSplatter seed={w.name.length * 13} className="absolute h-[140%] w-[140%] text-black/70" />
+                        <span className="gothic-title relative text-7xl text-vellum/60">{w.name.charAt(0)}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="px-3 pb-3 pt-4">
+                    <h2 className="gothic-title text-4xl">{w.name}</h2>
+                    {w.tagline && <p className="mt-2 font-serif text-lg italic text-ash">{w.tagline}</p>}
+                    <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.25em] text-phosphor/80">
+                      {w._count.articles} records on file
+                    </p>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

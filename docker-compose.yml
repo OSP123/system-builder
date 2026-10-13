@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: cerulean-db
+    environment:
+      POSTGRES_USER: cerulean
+      POSTGRES_PASSWORD: cerulean
+      POSTGRES_DB: cerulean
+    ports:
+      - "5433:5432"
+    volumes:
+      - cerulean-db:/var/lib/postgresql/data
+      - ./scripts/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+volumes:
+  cerulean-db:
