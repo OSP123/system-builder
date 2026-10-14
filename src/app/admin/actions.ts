@@ -9,17 +9,20 @@ import * as content from "@/lib/content";
 import { db } from "@/lib/db";
 import { deleteImage } from "@/lib/storage";
 import * as users from "@/lib/users";
+import { requestPasswordReset, resetPasswordWithToken } from "@/lib/password-reset";
 import {
   articleSchema,
   changePasswordSchema,
   characterSchema,
   flattenErrors,
+  forgotPasswordSchema,
   formToObject,
   loginSchema,
   narrativeSchema,
   newUserSchema,
   planetSchema,
   resetPasswordSchema,
+  resetWithTokenSchema,
   systemSchema,
   unitSchema,
   updateUserSchema,
@@ -282,6 +285,39 @@ export async function deleteUser(userId: string) {
 // ---------- Own account ----------
 
 export async function changePassword(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const r = await mutate(changePasswordSchema, form, (u, d) => users.changeOwnPassword(u.id, d.currentPassword, d.newPassword));
+  const r = await mutate(changePasswordSchema, form, async (u, d) => {
+    await users.changeOwnPassword(u.id, d.currentPassword, d.newPassword);
+    // The change signs out every older session, including this one; issue a fresh one.
+    await createSession({ userId: u.id, role: u.role });
+  });
   return r.ok ? { saved: true } : r.state;
+}
+
+// ---------- Forgot password (public) ----------
+
+export type ForgotState = { sent?: boolean; error?: string };
+
+/** Pad responses to a fixed minimum so timing doesn't reveal whether an account exists. */
+const RESET_MIN_MS = 1200;
+
+export async function forgotPassword(_prev: ForgotState, form: FormData): Promise<ForgotState> {
+  const started = Date.now();
+  const parsed = forgotPasswordSchema.safeParse(formToObject(form));
+  if (!parsed.success) return { error: "Enter a valid email" };
+  try {
+    await requestPasswordReset(parsed.data.email);
+  } catch (e) {
+    console.error("[password-reset] request failed", e);
+  }
+  const wait = RESET_MIN_MS - (Date.now() - started);
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+  return { sent: true };
+}
+
+export async function resetPasswordFromLink(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const parsed = resetWithTokenSchema.safeParse(formToObject(form));
+  if (!parsed.success) return { errors: flattenErrors(parsed.error) };
+  const ok = await resetPasswordWithToken(parsed.data.token, parsed.data.password);
+  if (!ok) return { errors: { _form: "This link is invalid, expired or already used. Request a new one." } };
+  redirect("/admin/login?reset=1");
 }

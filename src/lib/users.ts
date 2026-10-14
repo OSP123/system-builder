@@ -53,7 +53,11 @@ export async function updateUser(actor: Actor, userId: string, data: z.output<ty
 
 export async function resetPassword(actor: Actor, userId: string, password: string) {
   assertAdmin(actor);
-  await db.user.update({ where: { id: userId }, data: { passwordHash: await bcrypt.hash(password, BCRYPT_ROUNDS) } });
+  // Signs the user out everywhere.
+  await db.user.update({
+    where: { id: userId },
+    data: { passwordHash: await bcrypt.hash(password, BCRYPT_ROUNDS), passwordChangedAt: new Date() },
+  });
 }
 
 /**
@@ -87,7 +91,11 @@ export async function changeOwnPassword(userId: string, currentPassword: string,
   if (!user || !(await bcrypt.compare(currentPassword, user.passwordHash))) {
     throw new ContentError("Current password is incorrect", "currentPassword");
   }
-  await db.user.update({ where: { id: userId }, data: { passwordHash: await bcrypt.hash(newPassword, BCRYPT_ROUNDS) } });
+  // Signs out other sessions; the caller re-issues the current one.
+  await db.user.update({
+    where: { id: userId },
+    data: { passwordHash: await bcrypt.hash(newPassword, BCRYPT_ROUNDS), passwordChangedAt: new Date() },
+  });
 }
 
 /** Counts of what each user has authored, for the Users page. */

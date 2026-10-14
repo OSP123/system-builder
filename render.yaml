@@ -30,7 +30,16 @@ services:
         generateValue: true
       - key: ADMIN_EMAIL
         sync: false
+      # Only used to create the admin account the first time. Afterwards the
+      # password is managed in the app; set ADMIN_RESET_PASSWORD=true for one
+      # deploy to force it back to ADMIN_PASSWORD (then remove it).
       - key: ADMIN_PASSWORD
+        sync: false
+      # Password-reset emails (https://resend.com). Links use RENDER_EXTERNAL_URL
+      # automatically; set APP_URL to override (e.g. a custom domain).
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
         sync: false
       - key: UPLOAD_DIR
         value: ./uploads

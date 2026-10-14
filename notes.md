@@ -90,3 +90,15 @@ Follow-ups:
 - Give contributors display names, otherwise their email is shown as author
 - Merge feature/contributors (stacked on feature/codex-sections) to main to deploy
 
+Date: 2026-10-14
+Tasks:
+- Fixed: the boot-time seed reset the admin password to ADMIN_PASSWORD on every Render start; it now only sets it on creation or when ADMIN_RESET_PASSWORD=true
+- Forgot-password flow: emailed one-time links (1h expiry, hashed at rest, newest link voids older ones, 3/hour/account limit, identical response and padded timing for unknown emails), reset page with no-referrer
+- Any password change (reset link, admin reset, Account page, forced seed reset) signs the user out on other devices (passwordChangedAt vs session iat); the changer's own session is re-issued
+- Email via Resend HTTP API (key in git-ignored .env and Render dashboard), outbox-file transport for tests, console fallback; links built from APP_URL/RENDER_EXTERNAL_URL, never the Host header
+- Verified: 106 Vitest + 7 Playwright tests passing (new e2e covers the whole reset flow incl. signing out another session); real Resend send accepted for the account's own address
+Follow-ups:
+- Resend sandbox only delivers to omarpatel123@yahoo.com; verify a domain in Resend (and set EMAIL_FROM) before reset emails reach the gmail admin or contributors
+- Consider rotating the Resend API key (it was pasted into chat)
+- Set RESEND_API_KEY/EMAIL_FROM in Render
+

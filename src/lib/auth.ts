@@ -5,9 +5,11 @@ import { db } from "./db";
 import {
   SESSION_COOKIE,
   SESSION_TTL_SECONDS,
+  isSessionStale,
   signSession,
   verifySession,
   type SessionPayload,
+  type VerifiedSession,
 } from "./session";
 
 export async function hashPassword(password: string): Promise<string> {
@@ -51,7 +53,7 @@ export async function destroySession() {
   jar.delete(SESSION_COOKIE);
 }
 
-export async function getSession(): Promise<SessionPayload | null> {
+export async function getSession(): Promise<VerifiedSession | null> {
   const jar = await cookies();
   return verifySession(jar.get(SESSION_COOKIE)?.value);
 }
@@ -64,8 +66,9 @@ export async function requireUser() {
   const session = await getSession();
   if (!session) redirect("/admin/login");
   const user = await db.user.findUnique({ where: { id: session.userId } });
-  // A deleted or disabled account loses access on its next request, cookie or not.
-  if (!user || user.disabled) redirect("/admin/login");
+  // A deleted or disabled account, or a session from before a password change,
+  // loses access on its next request, cookie or not.
+  if (!user || user.disabled || isSessionStale(session.issuedAt, user.passwordChangedAt)) redirect("/admin/login");
   return user;
 }
 

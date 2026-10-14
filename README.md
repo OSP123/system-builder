@@ -22,7 +22,14 @@ npm run db:import-lore   # load Sons-of-Cerulean-lore.md into the Cerulean world
 npm run dev              # http://localhost:3000, admin at /admin
 ```
 
-Re-running `npm run db:seed` resets the admin password to whatever `ADMIN_PASSWORD` is set to.
+`ADMIN_PASSWORD` only applies when the admin account is first created. After that, change it in the app (Account), or set `ADMIN_RESET_PASSWORD=true` and run `npm run db:seed` to force it back to `ADMIN_PASSWORD`.
+
+## Passwords
+
+- **Forgot password:** "Forgot password?" on the login page emails a one-time link that expires after an hour. It responds identically whether or not the email has an account, and sends at most 3 links per account per hour. Only a hash of each link is stored.
+- **Admins** can reset any user's password from Users. **Everyone** can change their own under Account.
+- Any password change signs that user out on every other device.
+- Email goes through [Resend](https://resend.com) when `RESEND_API_KEY` is set; otherwise it's printed to the server log. Until a domain is verified in Resend, it can only deliver to the Resend account's own address.
 
 ## Your emblem
 
@@ -34,7 +41,8 @@ Put your symbol at `public/emblem.svg` (or `.png`, `.webp`, `.jpg`, `.avif`). It
 
 1. Push this repo to GitHub.
 2. In Render: **New → Blueprint**, pick the repo, and enter `ADMIN_EMAIL` and `ADMIN_PASSWORD` when prompted. `AUTH_SECRET` is generated for you.
-3. On every boot the service runs migrations, the admin seed (which resets the admin password to `ADMIN_PASSWORD`) and the lore import, then starts. Render health-checks `/api/health`.
+3. On every boot the service runs migrations, the admin seed (which creates the admin account if it's missing but never changes an existing password unless `ADMIN_RESET_PASSWORD=true`) and the lore import, then starts. Render health-checks `/api/health`.
+4. For password-reset emails, set `RESEND_API_KEY` and `EMAIL_FROM` in the Render dashboard.
 
 Free-tier limits:
 - **Uploaded images are temporary.** There's no persistent disk, so uploads vanish on each deploy or restart. The CMS shows a warning banner. Text content lives in Postgres and is safe.

@@ -1,39 +1,30 @@
 /**
- * Creates (or updates the password of) the admin account from ADMIN_EMAIL /
- * ADMIN_PASSWORD, and an empty, unpublished "Cerulean" world owned by it.
+ * Ensures the admin account from ADMIN_EMAIL exists (see src/lib/seed-admin.ts
+ * for when ADMIN_PASSWORD is applied) and an empty "Cerulean" world owned by it.
  * Safe to run repeatedly.
  */
 import "dotenv/config";
-import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+import { ensureAdmin } from "../src/lib/seed-admin";
 
 const db = new PrismaClient();
 
 async function main() {
-  const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const password = process.env.ADMIN_PASSWORD;
-  if (!email || !password) throw new Error("Set ADMIN_EMAIL and ADMIN_PASSWORD in .env");
-  if (password.length < 10) throw new Error("ADMIN_PASSWORD must be at least 10 characters");
-
-  const passwordHash = await bcrypt.hash(password, 12);
-  const admin = await db.user.upsert({
-    where: { email },
-    update: { passwordHash, role: "ADMIN" },
-    create: { email, passwordHash, role: "ADMIN", name: "Archivist" },
-  });
+  const { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_RESET_PASSWORD } = process.env;
+  const { admin, action } = await ensureAdmin(db, { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_RESET_PASSWORD });
 
   await db.world.upsert({
     where: { slug: "cerulean" },
     update: {},
-    create: {
-      slug: "cerulean",
-      name: "Cerulean",
-      tagline: "",
-      ownerId: admin.id,
-    },
+    create: { slug: "cerulean", name: "Cerulean", tagline: "", ownerId: admin.id },
   });
 
-  console.log(`Admin ready: ${email}`);
+  const messages = {
+    created: "created",
+    "password-reset": "password reset from ADMIN_PASSWORD (remove ADMIN_RESET_PASSWORD now)",
+    unchanged: "exists; password left unchanged",
+  };
+  console.log(`Admin ${admin.email}: ${messages[action]}`);
 }
 
 main()

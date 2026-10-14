@@ -1,19 +1,24 @@
-import { Emblem } from "@/components/ornament/Emblem";
+import Link from "next/link";
+import { AuthCard } from "@/components/admin/AuthCard";
 import { LoginForm } from "./LoginForm";
-import { SITE } from "@/lib/site";
 
 export const metadata = { title: "Admin sign in" };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  const { next } = await searchParams;
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; reset?: string }> }) {
+  const { next, reset } = await searchParams;
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="gothic-frame w-full max-w-sm p-8">
-        <Emblem className="mx-auto h-16 w-auto" />
-        <p className="gothic-title mt-4 text-center text-5xl">{SITE.name}</p>
-        <p className="mt-2 text-center font-mono text-[11px] uppercase tracking-[0.3em] text-phosphor/80">+++ Identify yourself +++</p>
-        <LoginForm next={next ?? ""} />
-      </div>
-    </div>
+    <AuthCard subtitle="Identify yourself">
+      {reset === "1" && (
+        <p role="status" className="cogitator mt-6 p-3 text-xs uppercase tracking-widest">
+          Password changed. Sign in with your new password.
+        </p>
+      )}
+      <LoginForm next={next ?? ""} />
+      <p className="mt-6 text-center text-sm">
+        <Link href="/admin/forgot-password" className="text-ash underline-offset-4 hover:text-parchment hover:underline">
+          Forgot password?
+        </Link>
+      </p>
+    </AuthCard>
   );
 }
