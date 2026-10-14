@@ -109,3 +109,13 @@ Follow-ups:
 - Accounts exist locally only; create them on the live site via Users after deploying
 - No display names set (their emails will show as author); ask them to change their passwords under Account
 
+Date: 2026-10-14
+Tasks:
+- Full pre-push verification: typecheck, lint, 106 Vitest, fresh production build, 7 Playwright; rehearsed the upgrade from the deployed commit on a scratch database (migrations, seed, character move) with no data loss
+- Fast-forwarded main to the feature work and pushed; Render deployed it
+- Verified live site (https://system-builder-0zxo.onrender.com): health OK, new pages (characters, army list, narratives, forgot password) live, protected routes redirect/401 when signed out, no console errors
+Follow-ups:
+- Create the three contributor accounts on the live Users page
+- Set RESEND_API_KEY / EMAIL_FROM on Render; verify a domain in Resend
+- Free tier: uploaded images are lost on restart/deploy; free Postgres expires 30 days after creation
+
