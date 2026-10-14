@@ -3,11 +3,11 @@ import { notFound } from "next/navigation";
 import { PlanetForm } from "@/components/admin/forms";
 import { db } from "@/lib/db";
 import { createPlanet } from "../../../../../../../actions";
-import { loadEditableWorld } from "../../../../../../data";
+import { loadCmsWorld } from "../../../../../../data";
 
 export default async function NewPlanetPage({ params }: { params: Promise<{ worldId: string; systemId: string }> }) {
   const p = await params;
-  const { world } = await loadEditableWorld(p.worldId);
+  const { world } = await loadCmsWorld(p.worldId);
   const system = await db.starSystem.findFirst({ where: { id: p.systemId, worldId: world.id } });
   if (!system) notFound();
   return (

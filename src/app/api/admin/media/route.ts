@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { assertCanEditWorld, ContentError, ForbiddenError } from "@/lib/content";
+import { assertCanContribute, ContentError, ForbiddenError } from "@/lib/content";
 import { db } from "@/lib/db";
 import { MAX_UPLOAD_BYTES, publicUrl, saveImage, UploadError } from "@/lib/storage";
 
 /** Upload one image into a world's media library. multipart/form-data: file, worldId, alt? */
 export async function POST(req: Request) {
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Re-read the user: the cookie's role may be stale, and the account may be disabled.
+  const user = session
+    ? await db.user.findUnique({ where: { id: session.userId }, select: { id: true, role: true, disabled: true } })
+    : null;
+  if (!user || user.disabled) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");
@@ -20,7 +24,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    await assertCanEditWorld({ id: session.userId, role: session.role }, worldId);
+    await assertCanContribute(user, worldId);
     const saved = await saveImage(new Uint8Array(await file.arrayBuffer()));
     const alt = String(form?.get("alt") ?? "").trim().slice(0, 300) || null;
     const media = await db.media.create({
@@ -31,7 +35,7 @@ export async function POST(req: Request) {
         originalName: file.name.slice(0, 200),
         alt,
         worldId,
-        uploadedById: session.userId,
+        uploadedById: user.id,
       },
     });
     return NextResponse.json({ media: { ...media, url: publicUrl(media.key) } }, { status: 201 });

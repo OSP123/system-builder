@@ -3,7 +3,7 @@ import { MediaLibraryProvider } from "@/components/admin/MediaLibrary";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { WorldTabs } from "@/components/admin/WorldTabs";
 import { db } from "@/lib/db";
-import { loadEditableWorld } from "../../data";
+import { loadCmsWorld } from "../../data";
 
 export default async function WorldAdminLayout({
   children,
@@ -12,15 +12,15 @@ export default async function WorldAdminLayout({
   children: React.ReactNode;
   params: Promise<{ worldId: string }>;
 }) {
-  const { world } = await loadEditableWorld((await params).worldId);
+  const { user, world } = await loadCmsWorld((await params).worldId);
   const media = await db.media.findMany({
     where: { worldId: world.id },
     orderBy: { createdAt: "desc" },
-    select: { id: true, key: true, alt: true, originalName: true },
+    select: { id: true, key: true, alt: true, originalName: true, uploadedById: true },
   });
 
   return (
-    <MediaLibraryProvider worldId={world.id} initial={media}>
+    <MediaLibraryProvider worldId={world.id} initial={media} currentUserId={user.id} isAdmin={user.role === "ADMIN"}>
       <div className="mb-6 flex items-center gap-4">
         <h1 className="gothic-title text-5xl">{world.name}</h1>
         <StatusBadge published={world.published} />

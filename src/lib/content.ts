@@ -1,12 +1,16 @@
-import { Prisma, type User } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import type { z } from "zod";
 import { db } from "./db";
+import { canContribute, canEditRecord, canManageWorld, isAdmin, type Actor } from "./permissions";
 import type { articleSchema, planetSchema, systemSchema, worldSchema } from "./validation";
 
 /**
- * Content mutations with authorization. Admins may edit any world; editors
- * only the worlds they own. Server actions call these after validating input.
+ * Content mutations with authorization (rules in permissions.ts). Server
+ * actions call these after validating input; every create records the author
+ * and every update/delete checks it.
  */
+
+export type { Actor };
 
 export class ContentError extends Error {
   constructor(
@@ -18,26 +22,46 @@ export class ContentError extends Error {
 }
 
 export class ForbiddenError extends Error {
-  constructor() {
-    super("You do not have permission to edit this world");
+  constructor(message = "You do not have permission to edit this world") {
+    super(message);
   }
 }
 
-export type Actor = Pick<User, "id" | "role">;
 type WorldInput = z.output<typeof worldSchema>;
 type ArticleInput = z.output<typeof articleSchema>;
 type SystemInput = z.output<typeof systemSchema>;
 type PlanetInput = z.output<typeof planetSchema>;
 
-export async function assertCanEditWorld(actor: Actor, worldId: string) {
-  const world = await db.world.findUnique({ where: { id: worldId }, select: { id: true, ownerId: true } });
+async function findWorld(worldId: string) {
+  const world = await db.world.findUnique({ where: { id: worldId }, select: { id: true, ownerId: true, published: true } });
   if (!world) throw new ContentError("World not found");
-  if (actor.role !== "ADMIN" && world.ownerId !== actor.id) throw new ForbiddenError();
   return world;
 }
 
-export function editableWorldsWhere(actor: Actor): Prisma.WorldWhereInput {
-  return actor.role === "ADMIN" ? {} : { ownerId: actor.id };
+/** World settings, publishing and deletion: owner or admin. */
+export async function assertCanManageWorld(actor: Actor, worldId: string) {
+  const world = await findWorld(worldId);
+  if (!canManageWorld(actor, world)) throw new ForbiddenError();
+  return world;
+}
+
+/** Adding records to a world: published worlds, or worlds the actor owns. */
+export async function assertCanContribute(actor: Actor, worldId: string) {
+  const world = await findWorld(worldId);
+  if (!canContribute(actor, world)) throw new ForbiddenError("You do not have permission to add to this world");
+  return world;
+}
+
+/** Editing or deleting a record: its author or an admin. */
+export function assertCanEditRecord(actor: Actor, record: { authorId: string | null }) {
+  if (!canEditRecord(actor, record)) {
+    throw new ForbiddenError("You do not have permission to change another contributor's record");
+  }
+}
+
+/** Worlds shown on a user's CMS dashboard. */
+export function accessibleWorldsWhere(actor: Actor): Prisma.WorldWhereInput {
+  return isAdmin(actor) ? {} : { OR: [{ ownerId: actor.id }, { published: true }] };
 }
 
 /** Translate unique-constraint failures on slug into a friendly field error. */
@@ -67,13 +91,13 @@ export async function createWorld(actor: Actor, data: WorldInput) {
 }
 
 export async function updateWorld(actor: Actor, worldId: string, data: WorldInput) {
-  await assertCanEditWorld(actor, worldId);
+  await assertCanManageWorld(actor, worldId);
   await assertMediaInWorld(data.coverImageId, worldId);
   return guardSlug(() => db.world.update({ where: { id: worldId }, data }));
 }
 
 export async function deleteWorld(actor: Actor, worldId: string) {
-  await assertCanEditWorld(actor, worldId);
+  await assertCanManageWorld(actor, worldId);
   await db.world.delete({ where: { id: worldId } });
 }
 
@@ -92,23 +116,27 @@ async function assertArticleLinks(worldId: string, data: ArticleInput) {
 }
 
 export async function createArticle(actor: Actor, worldId: string, data: ArticleInput) {
-  await assertCanEditWorld(actor, worldId);
+  await assertCanContribute(actor, worldId);
   await assertArticleLinks(worldId, data);
-  return guardSlug(() => db.article.create({ data: { ...data, worldId } }));
+  return guardSlug(() => db.article.create({ data: { ...data, worldId, authorId: actor.id } }));
+}
+
+async function findArticle(id: string) {
+  return db.article.findUnique({ where: { id }, select: { worldId: true, authorId: true } });
 }
 
 export async function updateArticle(actor: Actor, articleId: string, data: ArticleInput) {
-  const article = await db.article.findUnique({ where: { id: articleId }, select: { worldId: true } });
+  const article = await findArticle(articleId);
   if (!article) throw new ContentError("Article not found");
-  await assertCanEditWorld(actor, article.worldId);
+  assertCanEditRecord(actor, article);
   await assertArticleLinks(article.worldId, data);
   return guardSlug(() => db.article.update({ where: { id: articleId }, data }));
 }
 
 export async function deleteArticle(actor: Actor, articleId: string) {
-  const article = await db.article.findUnique({ where: { id: articleId }, select: { worldId: true } });
+  const article = await findArticle(articleId);
   if (!article) return;
-  await assertCanEditWorld(actor, article.worldId);
+  assertCanEditRecord(actor, article);
   await db.article.delete({ where: { id: articleId } });
 }
 
@@ -119,23 +147,36 @@ function systemData(data: SystemInput) {
 }
 
 export async function createSystem(actor: Actor, worldId: string, data: SystemInput) {
-  await assertCanEditWorld(actor, worldId);
+  await assertCanContribute(actor, worldId);
   await assertMediaInWorld(data.backdropImageId, worldId, "backdropImageId");
-  return guardSlug(() => db.starSystem.create({ data: { ...systemData(data), worldId } }));
+  return guardSlug(() => db.starSystem.create({ data: { ...systemData(data), worldId, authorId: actor.id } }));
+}
+
+async function findSystem(id: string) {
+  return db.starSystem.findUnique({ where: { id }, select: { worldId: true, authorId: true } });
 }
 
 export async function updateSystem(actor: Actor, systemId: string, data: SystemInput) {
-  const sys = await db.starSystem.findUnique({ where: { id: systemId }, select: { worldId: true } });
+  const sys = await findSystem(systemId);
   if (!sys) throw new ContentError("Star system not found");
-  await assertCanEditWorld(actor, sys.worldId);
+  assertCanEditRecord(actor, sys);
   await assertMediaInWorld(data.backdropImageId, sys.worldId, "backdropImageId");
   return guardSlug(() => db.starSystem.update({ where: { id: systemId }, data: systemData(data) }));
 }
 
+/** Deleting a system also deletes its planets, so non-admins may only do it when every planet is theirs too. */
 export async function deleteSystem(actor: Actor, systemId: string) {
-  const sys = await db.starSystem.findUnique({ where: { id: systemId }, select: { worldId: true } });
+  const sys = await findSystem(systemId);
   if (!sys) return;
-  await assertCanEditWorld(actor, sys.worldId);
+  assertCanEditRecord(actor, sys);
+  if (!isAdmin(actor)) {
+    const others = await db.planet.count({
+      where: { systemId, OR: [{ authorId: null }, { authorId: { not: actor.id } }] },
+    });
+    if (others > 0) {
+      throw new ForbiddenError("You do not have permission to delete planets other contributors added to this system");
+    }
+  }
   await db.starSystem.delete({ where: { id: systemId } });
 }
 
@@ -146,31 +187,42 @@ function planetData(data: PlanetInput) {
   return { ...rest, genParams: genParams === null ? Prisma.DbNull : (genParams as Prisma.InputJsonObject) };
 }
 
+/** Anyone who may contribute to the world may add a planet to any of its systems. */
 export async function createPlanet(actor: Actor, systemId: string, data: PlanetInput) {
-  const sys = await db.starSystem.findUnique({ where: { id: systemId }, select: { worldId: true } });
+  const sys = await findSystem(systemId);
   if (!sys) throw new ContentError("Star system not found");
-  await assertCanEditWorld(actor, sys.worldId);
+  await assertCanContribute(actor, sys.worldId);
   await assertMediaInWorld(data.coverImageId, sys.worldId);
-  return guardSlug(() => db.planet.create({ data: { ...planetData(data), systemId } }));
+  return guardSlug(() => db.planet.create({ data: { ...planetData(data), systemId, authorId: actor.id } }));
+}
+
+async function findPlanet(id: string) {
+  return db.planet.findUnique({ where: { id }, select: { authorId: true, system: { select: { worldId: true } } } });
 }
 
 export async function updatePlanet(actor: Actor, planetId: string, data: PlanetInput) {
-  const planet = await db.planet.findUnique({
-    where: { id: planetId },
-    select: { system: { select: { worldId: true } } },
-  });
+  const planet = await findPlanet(planetId);
   if (!planet) throw new ContentError("Planet not found");
-  await assertCanEditWorld(actor, planet.system.worldId);
+  assertCanEditRecord(actor, planet);
   await assertMediaInWorld(data.coverImageId, planet.system.worldId);
   return guardSlug(() => db.planet.update({ where: { id: planetId }, data: planetData(data) }));
 }
 
 export async function deletePlanet(actor: Actor, planetId: string) {
-  const planet = await db.planet.findUnique({
-    where: { id: planetId },
-    select: { system: { select: { worldId: true } } },
-  });
+  const planet = await findPlanet(planetId);
   if (!planet) return;
-  await assertCanEditWorld(actor, planet.system.worldId);
+  assertCanEditRecord(actor, planet);
   await db.planet.delete({ where: { id: planetId } });
+}
+
+// ---------- Media ----------
+
+/** Uploads are shared within a world; only the uploader or an admin may change or remove one. */
+export async function assertCanEditMedia(actor: Actor, mediaId: string) {
+  const media = await db.media.findUnique({ where: { id: mediaId } });
+  if (!media) return null;
+  if (!isAdmin(actor) && media.uploadedById !== actor.id) {
+    throw new ForbiddenError("You do not have permission to change another contributor's image");
+  }
+  return media;
 }

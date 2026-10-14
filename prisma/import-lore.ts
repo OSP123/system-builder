@@ -28,6 +28,7 @@ async function main() {
       worldId: world.id,
       slug: "cerulean",
       name: "Cerulean",
+      authorId: world.ownerId,
       segmentum: "Orpheus Sector",
       description: location ? `**Location:** ${location}` : null,
       published: true,
@@ -41,6 +42,7 @@ async function main() {
       systemId: system.id,
       slug: "cerulean",
       name: "Cerulean",
+      authorId: world.ownerId,
       classification: "Death World",
       orbitIndex: 1,
       description: [
@@ -69,7 +71,7 @@ async function main() {
     };
     const existing = await db.article.findUnique({ where: { worldId_slug: { worldId: world.id, slug: s.slug } } });
     if (!existing) {
-      await db.article.create({ data: { ...data, slug: s.slug, worldId: world.id } });
+      await db.article.create({ data: { ...data, slug: s.slug, worldId: world.id, authorId: world.ownerId } });
       created++;
     } else if (force) {
       await db.article.update({ where: { id: existing.id }, data });
@@ -85,7 +87,7 @@ async function main() {
     const exists = await db.article.findUnique({ where: { worldId_slug: { worldId: world.id, slug: stub.slug } } });
     if (exists) continue;
     await db.article.create({
-      data: { ...stub, worldId: world.id, body: "", published: false, planetId: planet.id, systemId: system.id, tags: ["cerulean"] },
+      data: { ...stub, worldId: world.id, authorId: world.ownerId, body: "", published: false, planetId: planet.id, systemId: system.id, tags: ["cerulean"] },
     });
     stubs++;
   }
@@ -100,6 +102,7 @@ async function main() {
       await db.character.create({
         data: {
           worldId: world.id,
+          authorId: world.ownerId,
           slug: c.slug,
           name: c.name,
           title: c.title,

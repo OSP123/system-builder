@@ -26,7 +26,7 @@ test("admin builds a world end to end and it appears publicly", async ({ page })
   await page.getByLabel("Email").fill(E2E_ADMIN.email);
   await page.getByLabel("Password").fill(E2E_ADMIN.password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "Your worlds" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "All worlds" })).toBeVisible();
 
   // Create world
   await page.getByRole("link", { name: "+ New world" }).click();

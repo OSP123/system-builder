@@ -1,10 +1,10 @@
 import { ArticleForm } from "@/components/admin/forms";
 import { createArticle } from "../../../../../actions";
-import { loadEditableWorld } from "../../../../data";
+import { loadCmsWorld } from "../../../../data";
 import { systemsForSelect } from "../systemsForSelect";
 
 export default async function NewArticlePage({ params }: { params: Promise<{ worldId: string }> }) {
-  const { world } = await loadEditableWorld((await params).worldId);
+  const { world } = await loadCmsWorld((await params).worldId);
   return (
     <div className="max-w-4xl">
       <h2 className="mb-6 font-display text-2xl">New record</h2>

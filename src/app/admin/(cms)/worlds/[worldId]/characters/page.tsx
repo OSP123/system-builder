@@ -1,15 +1,16 @@
 import Link from "next/link";
+import { AuthorTag } from "@/components/admin/Authorship";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { STATUS_LABELS } from "@/lib/codex";
 import { db } from "@/lib/db";
-import { loadEditableWorld } from "../../../data";
+import { authorSelect, loadCmsWorld } from "../../../data";
 
 export default async function CharactersAdminPage({ params }: { params: Promise<{ worldId: string }> }) {
-  const { world } = await loadEditableWorld((await params).worldId);
+  const { user, world } = await loadCmsWorld((await params).worldId);
   const characters = await db.character.findMany({
     where: { worldId: world.id },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, title: true, status: true, sortOrder: true, published: true },
+    select: { id: true, name: true, title: true, status: true, sortOrder: true, published: true, author: authorSelect },
   });
   const base = `/admin/worlds/${world.id}/characters`;
   return (
@@ -23,7 +24,7 @@ export default async function CharactersAdminPage({ params }: { params: Promise<
       ) : (
         <table className="w-full text-sm">
           <thead className="text-left text-xs uppercase tracking-widest text-ash">
-            <tr><th className="py-2">#</th><th>Name</th><th>Status</th><th>Visibility</th></tr>
+            <tr><th className="py-2">#</th><th>Name</th><th>Status</th><th>Author</th><th>Visibility</th></tr>
           </thead>
           <tbody>
             {characters.map((c) => (
@@ -34,6 +35,7 @@ export default async function CharactersAdminPage({ params }: { params: Promise<
                   {c.title && <span className="block text-xs text-ash">{c.title}</span>}
                 </td>
                 <td className="text-ash">{STATUS_LABELS[c.status]}</td>
+                <td className="text-xs"><AuthorTag author={c.author} currentUserId={user.id} /></td>
                 <td><StatusBadge published={c.published} /></td>
               </tr>
             ))}

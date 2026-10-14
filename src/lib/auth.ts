@@ -29,7 +29,9 @@ export async function authenticate(email: string, password: string) {
     await bcrypt.compare(password, dummyHash);
     return null;
   }
-  return (await verifyPassword(password, user.passwordHash)) ? user : null;
+  if (!(await verifyPassword(password, user.passwordHash))) return null;
+  // Same message as a wrong password, so disabled accounts aren't revealed.
+  return user.disabled ? null : user;
 }
 
 export async function createSession(payload: SessionPayload) {
@@ -62,6 +64,14 @@ export async function requireUser() {
   const session = await getSession();
   if (!session) redirect("/admin/login");
   const user = await db.user.findUnique({ where: { id: session.userId } });
-  if (!user) redirect("/admin/login");
+  // A deleted or disabled account loses access on its next request, cookie or not.
+  if (!user || user.disabled) redirect("/admin/login");
+  return user;
+}
+
+/** Guard for admin-only pages and actions (user management). */
+export async function requireAdmin() {
+  const user = await requireUser();
+  if (user.role !== "ADMIN") redirect("/admin");
   return user;
 }

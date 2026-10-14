@@ -2,10 +2,12 @@
 
 import { createContext, useCallback, useContext, useState } from "react";
 
-export type MediaItem = { id: string; key: string; alt: string | null; originalName: string };
+export type MediaItem = { id: string; key: string; alt: string | null; originalName: string; uploadedById: string };
 
 type Ctx = {
   worldId: string;
+  /** Whether the current user may caption or delete an upload (its uploader, or an admin). */
+  canEdit: (item: MediaItem) => boolean;
   items: MediaItem[];
   upload: (file: File) => Promise<MediaItem>;
   remove: (id: string) => void;
@@ -17,10 +19,14 @@ const MediaContext = createContext<Ctx | null>(null);
 export function MediaLibraryProvider({
   worldId,
   initial,
+  currentUserId,
+  isAdmin,
   children,
 }: {
   worldId: string;
   initial: MediaItem[];
+  currentUserId: string;
+  isAdmin: boolean;
   children: React.ReactNode;
 }) {
   const [items, setItems] = useState(initial);
@@ -42,7 +48,9 @@ export function MediaLibraryProvider({
 
   const remove = useCallback((id: string) => setItems((prev) => prev.filter((m) => m.id !== id)), []);
 
-  return <MediaContext.Provider value={{ worldId, items, upload, remove }}>{children}</MediaContext.Provider>;
+  return <MediaContext.Provider
+      value={{ worldId, items, upload, remove, canEdit: (m) => isAdmin || m.uploadedById === currentUserId }}
+    >{children}</MediaContext.Provider>;
 }
 
 export function useMediaLibrary() {

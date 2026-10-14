@@ -1,10 +1,10 @@
 import { Prisma } from "@prisma/client";
 import type { z } from "zod";
 import { db } from "./db";
-import { assertCanEditWorld, assertMediaInWorld, ContentError, guardSlug, type Actor } from "./content";
+import { assertCanContribute, assertCanEditRecord, assertMediaInWorld, ContentError, guardSlug, type Actor } from "./content";
 import type { characterSchema, narrativeSchema, unitSchema } from "./validation";
 
-/** Mutations for characters, army list units and narratives, with the same ownership rules as content.ts. */
+/** Mutations for characters, army list units and narratives, with the same authorship rules as content.ts. */
 
 type CharacterInput = z.output<typeof characterSchema>;
 type UnitInput = z.output<typeof unitSchema>;
@@ -18,14 +18,14 @@ async function assertPlanetInWorld(planetId: string | null | undefined, worldId:
   if (!planet) throw new ContentError("Planet not found in this world", field);
 }
 
-async function worldOf(model: "character" | "unit" | "narrative", id: string) {
-  const row =
-    model === "character"
-      ? await db.character.findUnique({ where: { id }, select: { worldId: true } })
-      : model === "unit"
-        ? await db.unit.findUnique({ where: { id }, select: { worldId: true } })
-        : await db.narrative.findUnique({ where: { id }, select: { worldId: true } });
-  return row?.worldId ?? null;
+/** World and author of an existing record, or null if it doesn't exist. */
+async function recordOf(model: "character" | "unit" | "narrative", id: string) {
+  const select = { worldId: true, authorId: true } as const;
+  return model === "character"
+    ? db.character.findUnique({ where: { id }, select })
+    : model === "unit"
+      ? db.unit.findUnique({ where: { id }, select })
+      : db.narrative.findUnique({ where: { id }, select });
 }
 
 // ---------- Characters ----------
@@ -40,23 +40,24 @@ async function checkCharacter(worldId: string, d: CharacterInput) {
 }
 
 export async function createCharacter(actor: Actor, worldId: string, d: CharacterInput) {
-  await assertCanEditWorld(actor, worldId);
+  await assertCanContribute(actor, worldId);
   await checkCharacter(worldId, d);
-  return guardSlug(() => db.character.create({ data: { ...characterData(d), worldId } }));
+  return guardSlug(() => db.character.create({ data: { ...characterData(d), worldId, authorId: actor.id } }));
 }
 
 export async function updateCharacter(actor: Actor, id: string, d: CharacterInput) {
-  const worldId = await worldOf("character", id);
-  if (!worldId) throw new ContentError("Character not found");
-  await assertCanEditWorld(actor, worldId);
+  const rec = await recordOf("character", id);
+  if (!rec) throw new ContentError("Character not found");
+  assertCanEditRecord(actor, rec);
+  const worldId = rec.worldId;
   await checkCharacter(worldId, d);
   return guardSlug(() => db.character.update({ where: { id }, data: characterData(d) }));
 }
 
 export async function deleteCharacter(actor: Actor, id: string) {
-  const worldId = await worldOf("character", id);
-  if (!worldId) return;
-  await assertCanEditWorld(actor, worldId);
+  const rec = await recordOf("character", id);
+  if (!rec) return;
+  assertCanEditRecord(actor, rec);
   await db.character.delete({ where: { id } });
 }
 
@@ -67,23 +68,24 @@ function unitData(d: UnitInput) {
 }
 
 export async function createUnit(actor: Actor, worldId: string, d: UnitInput) {
-  await assertCanEditWorld(actor, worldId);
+  await assertCanContribute(actor, worldId);
   await assertMediaInWorld(d.imageId, worldId, "imageId");
-  return guardSlug(() => db.unit.create({ data: { ...unitData(d), worldId } }));
+  return guardSlug(() => db.unit.create({ data: { ...unitData(d), worldId, authorId: actor.id } }));
 }
 
 export async function updateUnit(actor: Actor, id: string, d: UnitInput) {
-  const worldId = await worldOf("unit", id);
-  if (!worldId) throw new ContentError("Unit not found");
-  await assertCanEditWorld(actor, worldId);
+  const rec = await recordOf("unit", id);
+  if (!rec) throw new ContentError("Unit not found");
+  assertCanEditRecord(actor, rec);
+  const worldId = rec.worldId;
   await assertMediaInWorld(d.imageId, worldId, "imageId");
   return guardSlug(() => db.unit.update({ where: { id }, data: unitData(d) }));
 }
 
 export async function deleteUnit(actor: Actor, id: string) {
-  const worldId = await worldOf("unit", id);
-  if (!worldId) return;
-  await assertCanEditWorld(actor, worldId);
+  const rec = await recordOf("unit", id);
+  if (!rec) return;
+  assertCanEditRecord(actor, rec);
   await db.unit.delete({ where: { id } });
 }
 
@@ -104,24 +106,27 @@ function narrativeData(d: NarrativeInput) {
 }
 
 export async function createNarrative(actor: Actor, worldId: string, d: NarrativeInput) {
-  await assertCanEditWorld(actor, worldId);
+  await assertCanContribute(actor, worldId);
   await checkNarrative(worldId, d);
   const { rest, characters } = narrativeData(d);
-  return guardSlug(() => db.narrative.create({ data: { ...rest, worldId, characters: { connect: characters } } }));
+  return guardSlug(() =>
+    db.narrative.create({ data: { ...rest, worldId, authorId: actor.id, characters: { connect: characters } } }),
+  );
 }
 
 export async function updateNarrative(actor: Actor, id: string, d: NarrativeInput) {
-  const worldId = await worldOf("narrative", id);
-  if (!worldId) throw new ContentError("Narrative not found");
-  await assertCanEditWorld(actor, worldId);
+  const rec = await recordOf("narrative", id);
+  if (!rec) throw new ContentError("Narrative not found");
+  assertCanEditRecord(actor, rec);
+  const worldId = rec.worldId;
   await checkNarrative(worldId, d);
   const { rest, characters } = narrativeData(d);
   return guardSlug(() => db.narrative.update({ where: { id }, data: { ...rest, characters: { set: characters } } }));
 }
 
 export async function deleteNarrative(actor: Actor, id: string) {
-  const worldId = await worldOf("narrative", id);
-  if (!worldId) return;
-  await assertCanEditWorld(actor, worldId);
+  const rec = await recordOf("narrative", id);
+  if (!rec) return;
+  assertCanEditRecord(actor, rec);
   await db.narrative.delete({ where: { id } });
 }

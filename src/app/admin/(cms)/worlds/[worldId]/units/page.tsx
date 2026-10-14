@@ -1,15 +1,16 @@
 import Link from "next/link";
+import { AuthorTag } from "@/components/admin/Authorship";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { SLOT_LABELS } from "@/lib/codex";
 import { db } from "@/lib/db";
-import { loadEditableWorld } from "../../../data";
+import { authorSelect, loadCmsWorld } from "../../../data";
 
 export default async function UnitsAdminPage({ params }: { params: Promise<{ worldId: string }> }) {
-  const { world } = await loadEditableWorld((await params).worldId);
+  const { user, world } = await loadCmsWorld((await params).worldId);
   const units = await db.unit.findMany({
     where: { worldId: world.id },
     orderBy: [{ slot: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, slot: true, points: true, published: true },
+    select: { id: true, name: true, slot: true, points: true, published: true, author: authorSelect },
   });
   const base = `/admin/worlds/${world.id}/units`;
   return (
@@ -23,7 +24,7 @@ export default async function UnitsAdminPage({ params }: { params: Promise<{ wor
       ) : (
         <table className="w-full text-sm">
           <thead className="text-left text-xs uppercase tracking-widest text-ash">
-            <tr><th className="py-2">Unit</th><th>Slot</th><th>Points</th><th>Visibility</th></tr>
+            <tr><th className="py-2">Unit</th><th>Slot</th><th>Points</th><th>Author</th><th>Visibility</th></tr>
           </thead>
           <tbody>
             {units.map((u) => (
@@ -31,6 +32,7 @@ export default async function UnitsAdminPage({ params }: { params: Promise<{ wor
                 <td className="py-3"><Link href={`${base}/${u.id}`} className="text-parchment hover:text-gold-bright">{u.name}</Link></td>
                 <td className="text-ash">{SLOT_LABELS[u.slot]}</td>
                 <td className="text-ash">{u.points ?? "—"}</td>
+                <td className="text-xs"><AuthorTag author={u.author} currentUserId={user.id} /></td>
                 <td><StatusBadge published={u.published} /></td>
               </tr>
             ))}

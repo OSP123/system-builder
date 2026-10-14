@@ -2,9 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { PlanetForm } from "@/components/admin/forms";
+import { ReadOnlyRecord } from "@/components/admin/Authorship";
 import { db } from "@/lib/db";
+import { canEditRecord } from "@/lib/permissions";
 import { deletePlanet, updatePlanet } from "../../../../../../../actions";
-import { loadEditableWorld } from "../../../../../../data";
+import { authorSelect, loadCmsWorld } from "../../../../../../data";
 
 export default async function EditPlanetPage({
   params,
@@ -12,12 +14,23 @@ export default async function EditPlanetPage({
   params: Promise<{ worldId: string; systemId: string; planetId: string }>;
 }) {
   const p = await params;
-  const { world } = await loadEditableWorld(p.worldId);
+  const { user, world } = await loadCmsWorld(p.worldId);
   const planet = await db.planet.findFirst({
     where: { id: p.planetId, systemId: p.systemId, system: { worldId: world.id } },
-    include: { system: { select: { id: true, name: true } } },
+    include: { system: { select: { id: true, name: true, slug: true } }, author: authorSelect },
   });
   if (!planet) notFound();
+  if (!canEditRecord(user, planet)) {
+    return (
+      <ReadOnlyRecord
+        title={planet.name}
+        author={planet.author}
+        backHref={`/admin/worlds/${world.id}/systems/${planet.system.id}`}
+        backLabel={planet.system.name}
+        publicHref={planet.published && world.published ? `/w/${world.slug}/systems/${planet.system.slug}/${planet.slug}` : null}
+      />
+    );
+  }
 
   return (
     <div className="max-w-3xl">

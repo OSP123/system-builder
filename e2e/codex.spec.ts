@@ -6,7 +6,7 @@ async function login(page: Page) {
   await page.getByLabel("Email").fill(E2E_ADMIN.email);
   await page.getByLabel("Password").fill(E2E_ADMIN.password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "Your worlds" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "All worlds" })).toBeVisible();
 }
 
 test("characters, army list and narratives: build in the CMS, read in rulebook style", async ({ page }) => {

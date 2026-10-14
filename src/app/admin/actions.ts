@@ -3,21 +3,26 @@
 import { revalidatePath } from "next/cache";
 import { redirect, unstable_rethrow } from "next/navigation";
 import type { z } from "zod";
-import { authenticate, createSession, destroySession, requireUser } from "@/lib/auth";
+import { authenticate, createSession, destroySession, requireAdmin, requireUser } from "@/lib/auth";
 import * as codex from "@/lib/codex-content";
 import * as content from "@/lib/content";
 import { db } from "@/lib/db";
 import { deleteImage } from "@/lib/storage";
+import * as users from "@/lib/users";
 import {
   articleSchema,
+  changePasswordSchema,
   characterSchema,
   flattenErrors,
   formToObject,
   loginSchema,
   narrativeSchema,
+  newUserSchema,
   planetSchema,
+  resetPasswordSchema,
   systemSchema,
   unitSchema,
+  updateUserSchema,
   worldSchema,
   type FieldErrors,
 } from "@/lib/validation";
@@ -160,22 +165,20 @@ export async function deletePlanet(worldId: string, systemId: string, planetId: 
 
 export async function updateMediaAlt(mediaId: string, form: FormData) {
   const user = await requireUser();
-  const media = await db.media.findUnique({ where: { id: mediaId } });
-  if (!media?.worldId) return;
-  await content.assertCanEditWorld(user, media.worldId);
+  const media = await content.assertCanEditMedia(user, mediaId);
+  if (!media) return;
   const alt = String(form.get("alt") ?? "").trim().slice(0, 300) || null;
   await db.media.update({ where: { id: mediaId }, data: { alt } });
-  revalidatePath(`/admin/worlds/${media.worldId}/media`);
+  if (media.worldId) revalidatePath(`/admin/worlds/${media.worldId}/media`);
 }
 
 export async function deleteMedia(mediaId: string) {
   const user = await requireUser();
-  const media = await db.media.findUnique({ where: { id: mediaId } });
-  if (!media?.worldId) return;
-  await content.assertCanEditWorld(user, media.worldId);
+  const media = await content.assertCanEditMedia(user, mediaId);
+  if (!media) return;
   await db.media.delete({ where: { id: mediaId } });
   await deleteImage(media.key);
-  revalidatePath(`/admin/worlds/${media.worldId}/media`);
+  if (media.worldId) revalidatePath(`/admin/worlds/${media.worldId}/media`);
 }
 
 // ---------- Characters ----------
@@ -239,4 +242,46 @@ export async function deleteNarrative(worldId: string, id: string) {
   const user = await requireUser();
   await codex.deleteNarrative(user, id);
   redirect(`/admin/worlds/${worldId}/narratives`);
+}
+
+// ---------- Users (admin only) ----------
+
+export async function createUser(_prev: ActionState, form: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const r = await mutate(newUserSchema, form, users.createUser);
+  if (!r.ok) return r.state;
+  redirect(`/admin/users/${r.result.id}?created=1`);
+}
+
+export async function updateUser(userId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const r = await mutate(updateUserSchema, form, (u, d) => users.updateUser(u, userId, d));
+  if (!r.ok) return r.state;
+  revalidatePath("/admin/users");
+  return { saved: true };
+}
+
+export async function resetUserPassword(userId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const r = await mutate(resetPasswordSchema, form, (u, d) => users.resetPassword(u, userId, d.password));
+  return r.ok ? { saved: true } : r.state;
+}
+
+export async function deleteUser(userId: string) {
+  const admin = await requireAdmin();
+  try {
+    await users.deleteUser(admin, userId);
+  } catch (e) {
+    // e.g. deleting the last admin: report it on the user's page instead of crashing.
+    if (e instanceof content.ContentError) redirect(`/admin/users/${userId}?error=${encodeURIComponent(e.message)}`);
+    throw e;
+  }
+  redirect("/admin/users");
+}
+
+// ---------- Own account ----------
+
+export async function changePassword(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const r = await mutate(changePasswordSchema, form, (u, d) => users.changeOwnPassword(u.id, d.currentPassword, d.newPassword));
+  return r.ok ? { saved: true } : r.state;
 }

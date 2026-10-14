@@ -79,3 +79,14 @@ Tasks:
 Follow-ups:
 - None
 
+Date: 2026-10-14
+Tasks:
+- Contributors: every record now has an author (migration backfills to the world owner); non-admins can add to published worlds or their own, and edit/delete only what they authored; world settings stay with the owner; admins can do everything
+- Users page (admin): create users with temporary passwords, change role, disable, reset password, delete (content reassigned to the admin); lock-out protection for self and the last admin. Account page: change own password
+- CMS shows an Author column ("You" for your own), sealed read-only view for others' records, contributor dashboard ("Open to contributors"); media captions/deletes limited to uploader or admin
+- Security: upload API and all checks use the user loaded from the DB (not the cookie role); disabled users lose access on their next request
+- Verified: 88 Vitest + 6 Playwright tests passing (new end-to-end contributor flow); screenshots of users page, contributor dashboard and sealed record
+Follow-ups:
+- Give contributors display names, otherwise their email is shown as author
+- Merge feature/contributors (stacked on feature/codex-sections) to main to deploy
+

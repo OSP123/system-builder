@@ -82,10 +82,12 @@ npm run test:e2e         # builds, then drives the real app in headless Chromium
 
 ## Users and roles
 
-- `ADMIN` can edit every world.
-- `EDITOR` can edit only the worlds they own.
+Admins create accounts on **Users** in the CMS (there is no public sign-up).
 
-For now the only account is the seeded admin. Opening sign-ups to other creators means adding a registration flow, since the ownership model already exists.
+- **Admin** can create, edit and delete anything, and manage users.
+- **Contributor** can add records (lore, characters, units, narratives, systems, planets, images) to any published world, or to worlds they own. They can edit or delete only the records they authored. A world's settings belong to its owner.
+
+Every record has an author. Deleting a user reassigns their worlds, records and uploads to the admin who deleted them; disabling a user keeps everything and blocks sign-in. Admins can't demote, disable or delete themselves or the last active admin. Everyone can change their own password under **Account**. The rules live in `src/lib/permissions.ts`.
 
 ## Roadmap
 

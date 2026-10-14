@@ -2,16 +2,29 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { CharacterForm } from "@/components/admin/forms";
+import { ReadOnlyRecord } from "@/components/admin/Authorship";
 import { db } from "@/lib/db";
+import { canEditRecord } from "@/lib/permissions";
 import { deleteCharacter, updateCharacter } from "../../../../../actions";
-import { loadEditableWorld } from "../../../../data";
+import { authorSelect, loadCmsWorld } from "../../../../data";
 import { systemsForSelect } from "../../articles/systemsForSelect";
 
 export default async function EditCharacterPage({ params }: { params: Promise<{ worldId: string; id: string }> }) {
   const p = await params;
-  const { world } = await loadEditableWorld(p.worldId);
-  const character = await db.character.findFirst({ where: { id: p.id, worldId: world.id } });
+  const { user, world } = await loadCmsWorld(p.worldId);
+  const character = await db.character.findFirst({ where: { id: p.id, worldId: world.id }, include: { author: authorSelect } });
   if (!character) notFound();
+  if (!canEditRecord(user, character)) {
+    return (
+      <ReadOnlyRecord
+        title={character.name}
+        author={character.author}
+        backHref={`/admin/worlds/${world.id}/characters`}
+        backLabel="Characters"
+        publicHref={character.published && world.published ? `/w/${world.slug}/characters/${character.slug}` : null}
+      />
+    );
+  }
   return (
     <div className="max-w-4xl">
       <div className="mb-6 flex items-center gap-4">

@@ -19,7 +19,12 @@ export default async function CmsLayout({ children }: { children: React.ReactNod
           </Link>
           <Link href="/" className="text-sm text-ash hover:text-gold-bright" target="_blank">View site ↗</Link>
           <div className="ml-auto flex items-center gap-4 font-mono text-xs uppercase tracking-widest text-ash">
-            <span>{user.email}</span>
+            {user.role === "ADMIN" && (
+              <Link href="/admin/users" className="hover:text-gold-bright">Users</Link>
+            )}
+            <Link href="/admin/account" className="hover:text-gold-bright" title={user.email}>
+              {user.name || user.email}
+            </Link>
             <form action={logout}>
               <button type="submit" className="uppercase hover:text-blood-bright">Sign out</button>
             </form>

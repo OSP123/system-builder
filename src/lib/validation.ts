@@ -304,3 +304,31 @@ export const narrativeSchema = z
       .transform((v) => Array.from(new Set((v ?? "").split(",").map((s) => s.trim()).filter(Boolean))).slice(0, 50)),
   })
   .transform((d) => withSlug(d, d.title));
+
+// ---------- Users ----------
+
+const password = z.string().min(10, "Use at least 10 characters").max(200);
+const role = z.enum(["ADMIN", "EDITOR"]);
+
+export const newUserSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Enter a valid email"),
+  name: optionalText(120),
+  password,
+  role: role.default("EDITOR"),
+});
+
+export const updateUserSchema = z.object({
+  name: optionalText(120),
+  role,
+  disabled: checkbox,
+});
+
+export const resetPasswordSchema = z.object({ password });
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Enter your current password"),
+    newPassword: password,
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.newPassword === d.confirmPassword, { message: "Passwords do not match", path: ["confirmPassword"] });

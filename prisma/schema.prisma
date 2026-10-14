@@ -48,14 +48,22 @@ enum ForceSlot {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String       @id @default(cuid())
+  email        String       @unique
   name         String?
   passwordHash String
-  role         Role     @default(EDITOR)
-  createdAt    DateTime @default(now())
+  role         Role         @default(EDITOR)
+  createdAt    DateTime     @default(now())
+  /// Disabled users cannot sign in; their content stays.
+  disabled     Boolean      @default(false)
   worlds       World[]
   media        Media[]
+  articles     Article[]
+  systems      StarSystem[]
+  planets      Planet[]
+  characters   Character[]
+  units        Unit[]
+  narratives   Narrative[]
 }
 
 /// A custom setting inside the 40k universe (e.g. Cerulean). Every piece of
@@ -85,6 +93,9 @@ model Article {
   id           String          @id @default(cuid())
   worldId      String
   world        World           @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  /// Who created the record. Only they (or an admin) may edit or delete it.
+  authorId     String?
+  author       User?           @relation(fields: [authorId], references: [id], onDelete: SetNull)
   slug         String
   title        String
   category     ArticleCategory @default(OTHER)
@@ -110,6 +121,9 @@ model StarSystem {
   id              String    @id @default(cuid())
   worldId         String
   world           World     @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  /// Who created the record. Only they (or an admin) may edit or delete it.
+  authorId        String?
+  author          User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
   slug            String
   name            String
   starType        String?
@@ -135,6 +149,9 @@ model Planet {
   id             String      @id @default(cuid())
   systemId       String
   system         StarSystem  @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  /// Who created the record. Only they (or an admin) may edit or delete it.
+  authorId       String?
+  author         User?       @relation(fields: [authorId], references: [id], onDelete: SetNull)
   slug           String
   name           String
   /// Imperial classification, e.g. "Hive World", "Forge World", "Death World".
@@ -185,6 +202,9 @@ model Character {
   id              String          @id @default(cuid())
   worldId         String
   world           World           @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  /// Who created the record. Only they (or an admin) may edit or delete it.
+  authorId        String?
+  author          User?           @relation(fields: [authorId], references: [id], onDelete: SetNull)
   slug            String
   name            String
   /// Rank or honorific shown before/under the name, e.g. "Custodian Captain".
@@ -220,6 +240,9 @@ model Unit {
   id           String    @id @default(cuid())
   worldId      String
   world        World     @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  /// Who created the record. Only they (or an admin) may edit or delete it.
+  authorId     String?
+  author       User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
   slug         String
   name         String
   faction      String?
@@ -250,6 +273,9 @@ model Narrative {
   id             String      @id @default(cuid())
   worldId        String
   world          World       @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  /// Who created the record. Only they (or an admin) may edit or delete it.
+  authorId       String?
+  author         User?       @relation(fields: [authorId], references: [id], onDelete: SetNull)
   slug           String
   title          String
   subtitle       String?

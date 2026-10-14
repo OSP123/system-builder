@@ -1,14 +1,15 @@
 import Link from "next/link";
+import { AuthorTag } from "@/components/admin/Authorship";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { db } from "@/lib/db";
-import { loadEditableWorld } from "../../../data";
+import { authorSelect, loadCmsWorld } from "../../../data";
 
 export default async function SystemsPage({ params }: { params: Promise<{ worldId: string }> }) {
-  const { world } = await loadEditableWorld((await params).worldId);
+  const { user, world } = await loadCmsWorld((await params).worldId);
   const systems = await db.starSystem.findMany({
     where: { worldId: world.id },
     orderBy: { name: "asc" },
-    include: { _count: { select: { planets: true } } },
+    include: { _count: { select: { planets: true } }, author: authorSelect },
   });
   const base = `/admin/worlds/${world.id}/systems`;
 
@@ -28,6 +29,7 @@ export default async function SystemsPage({ params }: { params: Promise<{ worldI
                 <span>
                   <span className="block font-display text-lg">{s.name}</span>
                   <span className="text-xs text-ash">{s._count.planets} planets · ({s.x}, {s.y}, {s.z})</span>
+                  <span className="mt-1 block text-xs"><AuthorTag author={s.author} currentUserId={user.id} /></span>
                 </span>
                 <StatusBadge published={s.published} />
               </Link>
