@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Grenze_Gotisch, IM_Fell_English, IM_Fell_English_SC, Inter, Libre_Caslon_Text, Share_Tech_Mono } from "next/font/google";
 import "./globals.css";
+import { SITE } from "@/lib/site";
 
 const grenze = Grenze_Gotisch({ variable: "--font-grenze", subsets: ["latin"] });
 const fellSc = IM_Fell_English_SC({ variable: "--font-fellsc", subsets: ["latin"], weight: "400" });
@@ -10,7 +11,7 @@ const caslon = Libre_Caslon_Text({ variable: "--font-caslon", subsets: ["latin"]
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "Cerulean · Archives of the 41st Millennium", template: "%s · Cerulean" },
+  title: { default: `${SITE.name} · ${SITE.tagline}`, template: `%s · ${SITE.name}` },
   description: "Lore archives for custom worlds of the Warhammer 40,000 universe.",
 };
 

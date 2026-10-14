@@ -6,6 +6,7 @@ import { Emblem } from "@/components/ornament/Emblem";
 import { InkSplatter } from "@/components/ornament/InkSplatter";
 import { SkullDivider } from "@/components/ornament/Skull";
 import { getPublishedWorlds } from "@/lib/queries";
+import { SITE } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export default async function Home() {
         <section className="relative pb-14 pt-16 text-center">
           <InkSplatter seed={7} className="pointer-events-none absolute left-1/2 top-4 -z-10 h-[420px] w-[420px] -translate-x-1/2 text-blood/40" />
           <Emblem className="mx-auto h-28 w-auto" />
-          <p className="mt-6 font-mono text-xs uppercase tracking-[0.45em] text-blood-bright">+++ Archives of the 41st Millennium +++</p>
+          <p className="mt-6 font-mono text-xs uppercase tracking-[0.45em] text-blood-bright">+++ {SITE.tagline} +++</p>
           <h1 className="gothic-title mt-5 text-6xl sm:text-8xl">Worlds Beyond the Astronomican</h1>
           <p className="mx-auto mt-6 max-w-2xl font-serif text-xl italic text-ash">
             Chronicles, star charts and sealed records of the forgotten worlds, kept in the grim darkness of the far future.

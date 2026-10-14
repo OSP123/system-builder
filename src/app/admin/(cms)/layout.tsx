@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Emblem } from "@/components/ornament/Emblem";
 import { requireUser } from "@/lib/auth";
 import { logout } from "../actions";
+import { SITE } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ export default async function CmsLayout({ children }: { children: React.ReactNod
                 <div className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-3">
           <Link href="/admin" className="flex items-center gap-3">
             <Emblem className="h-7 w-auto" />
-            <span className="gothic-title text-3xl">Cerulean</span>
+            <span className="gothic-title text-3xl">{SITE.name}</span>
             <span className="font-mono text-xs uppercase tracking-[0.3em] text-phosphor/80">{"// Administratum"}</span>
           </Link>
           <Link href="/" className="text-sm text-ash hover:text-gold-bright" target="_blank">View site ↗</Link>

@@ -1,6 +1,6 @@
-# Cerulean
+# Archivum
 
-A lore archive and CMS for custom worlds in the Warhammer 40,000 universe. It starts with the world of Cerulean, and other creators can add their own worlds.
+A lore archive and CMS for custom worlds in the Warhammer 40,000 universe. The first world is Cerulean, and other creators can add their own. The app's name and tagline live in `src/lib/site.ts`.
 
 - **Public site:** worlds → lore records by category → star systems → planets.
 - **Admin CMS** (`/admin`): Markdown editor with live preview, image library with uploads, cover images, draft/published states.

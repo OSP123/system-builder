@@ -38,7 +38,7 @@ export default async function WorldPage({ params, searchParams }: Props) {
         <InkSplatter seed={19} className="pointer-events-none absolute -bottom-24 -right-10 h-72 w-72 text-black/80" />
         <div className="relative px-6 py-16 text-center sm:px-12 sm:py-20">
           <Emblem className="mx-auto h-20 w-auto" />
-          <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.4em] text-blood-bright">+++ Sealed by order of the Cerulean Council +++</p>
+          <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.4em] text-blood-bright">+++ Sealed by order of the Administratum +++</p>
           <h1 className="gothic-title mt-4 text-7xl sm:text-9xl">{world.name}</h1>
           {world.tagline && <p className="mt-4 font-serif text-2xl italic text-vellum">{world.tagline}</p>}
         </div>

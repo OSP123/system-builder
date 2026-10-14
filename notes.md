@@ -63,3 +63,10 @@ Follow-ups:
 - Merge feature/codex-sections to main to deploy (Render runs migrations on boot)
 - Character drafts are unpublished; fill in and publish
 
+Date: 2026-10-14
+Tasks:
+- Renamed the app brand from "Cerulean" (one world) to "Archivum" via src/lib/site.ts (header, tab titles, footer, login, CMS); world hero line made generic ("Sealed by order of the Administratum")
+- Verified: 72 Vitest + 5 Playwright tests passing; screenshots of header and login
+Follow-ups:
+- Incident: a screenshot cleanup step killed the process on port 3101, which was the user's Land of Nerds dev server; it needs restarting. Screenshot servers now use a free port and stop only their own PID.
+
