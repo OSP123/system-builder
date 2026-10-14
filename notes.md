@@ -128,3 +128,11 @@ Tasks:
 Follow-ups:
 - Set AUTH_SECRET on Render before deploying this (otherwise the deploy is rejected by the check, and the old version stays up)
 
+Date: 2026-10-14
+Tasks:
+- User added AUTH_SECRET on Render; fast-forwarded main to the boot check (49f0ead) and pushed
+- New build served ~3 min after push; since the boot check gates startup, this confirms Render's AUTH_SECRET is present and long enough. Health, public pages, login and forgot-password pages respond; /admin/users redirects when signed out
+Follow-ups:
+- User to confirm admin sign-in on the live site, then add the three contributors
+- This notes entry is committed locally and will go out with the next push (not pushed alone, to avoid a redeploy)
+
