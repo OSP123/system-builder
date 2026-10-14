@@ -102,3 +102,10 @@ Follow-ups:
 - Consider rotating the Resend API key (it was pasted into chat)
 - Set RESEND_API_KEY/EMAIL_FROM in Render
 
+Date: 2026-10-14
+Tasks:
+- Created three Contributor accounts in the local database (everythingstop@hotmail.com, kenneth.s.hudson@gmail.com, deanpaulmay@gmail.com) via the users service; verified each can sign in and sees "Open to contributors"
+Follow-ups:
+- Accounts exist locally only; create them on the live site via Users after deploying
+- No display names set (their emails will show as author); ask them to change their passwords under Account
+
