@@ -136,3 +136,11 @@ Follow-ups:
 - User to confirm admin sign-in on the live site, then add the three contributors
 - This notes entry is committed locally and will go out with the next push (not pushed alone, to avoid a redeploy)
 
+Date: 2026-10-14
+Tasks:
+- User added the three contributor accounts on the live site
+- Final verification before push: typecheck, lint, 115 Vitest, production build, 7 Playwright, config check all passing
+Follow-ups:
+- Resend domain verification (reset emails currently only reach the Resend account address)
+- Free tier: uploads ephemeral; free Postgres expires 30 days after creation
+
