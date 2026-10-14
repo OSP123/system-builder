@@ -1,7 +1,9 @@
 "use client";
 
-import { createContext, startTransition, useActionState, useContext, useEffect, useState } from "react";
+import { createContext, startTransition, useActionState, useContext, useEffect, useRef, useState } from "react";
 import type { ActionState } from "@/app/admin/actions";
+import { failureNotice, successLine } from "@/lib/notices";
+import { SaveNotice, type Notice } from "./SaveNotice";
 
 const ErrorsContext = createContext<Record<string, string>>({});
 const PendingContext = createContext(false);
@@ -12,47 +14,73 @@ type Props = {
   className?: string;
 };
 
+const SUCCESS_MS = 6000;
+
 /**
- * A form wired to a server action, exposing field errors to <Field> children.
+ * A form wired to a server action, exposing field errors to <Field> children
+ * and announcing every save result with a notice.
+ *
  * Submits via onSubmit rather than `action=` because React 19 resets
  * uncontrolled inputs after an action, which would wipe the user's input
  * whenever validation fails.
  */
 export function ActionForm({ action, children, className }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
-  const [showSaved, setShowSaved] = useState(false);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const counter = useRef(0);
 
+  // Result of the latest submit.
   useEffect(() => {
-    if (!state.saved) return;
-    setShowSaved(true);
-    const t = setTimeout(() => setShowSaved(false), 2500);
-    return () => clearTimeout(t);
+    const errors = state.errors ?? {};
+    if (state.saved) {
+      setNotice({ kind: "saved", detail: successLine("saved"), id: ++counter.current });
+    } else if (Object.keys(errors).length > 0) {
+      setNotice({ ...failureNotice(errors), id: ++counter.current });
+      // Bring the first problem into view.
+      const first = formRef.current?.querySelector<HTMLElement>("[data-field-error], [data-form-error]");
+      first?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   }, [state]);
+
+  // Create actions redirect to the new record's editor with ?created=1.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("created") !== "1") return;
+    setNotice({ kind: "created", detail: successLine("created"), id: ++counter.current });
+    url.searchParams.delete("created");
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+  }, []);
+
+  // Successes fade on their own; failures stay until dismissed or resubmitted.
+  useEffect(() => {
+    if (!notice || (notice.kind !== "saved" && notice.kind !== "created")) return;
+    const t = setTimeout(() => setNotice(null), SUCCESS_MS);
+    return () => clearTimeout(t);
+  }, [notice]);
 
   const errors = state.errors ?? {};
   return (
     <ErrorsContext.Provider value={errors}>
       <PendingContext.Provider value={pending}>
-      <form
-        className={className ?? "space-y-6"}
-        onSubmit={(e) => {
-          e.preventDefault();
-          const data = new FormData(e.currentTarget);
-          startTransition(() => formAction(data));
-        }}
-      >
-        {errors._form && (
-          <p role="alert" className="rounded-md border border-blood bg-blood/10 px-4 py-2 text-sm text-red-300">
-            {errors._form}
-          </p>
-        )}
-        {children}
-        {showSaved && (
-          <p role="status" className="fixed bottom-6 right-6 rounded-md bg-cerulean px-4 py-2 text-sm font-semibold text-white shadow-lg">
-            Saved
-          </p>
-        )}
-      </form>
+        <form
+          ref={formRef}
+          className={className ?? "space-y-6"}
+          onSubmit={(e) => {
+            e.preventDefault();
+            setNotice(null);
+            const data = new FormData(e.currentTarget);
+            startTransition(() => formAction(data));
+          }}
+        >
+          {errors._form && (
+            <p data-form-error className="border border-blood bg-blood/15 px-4 py-2 text-sm text-red-300">
+              {errors._form}
+            </p>
+          )}
+          {children}
+        </form>
+        {notice && <SaveNotice notice={notice} onDismiss={() => setNotice(null)} />}
       </PendingContext.Provider>
     </ErrorsContext.Provider>
   );
@@ -77,7 +105,11 @@ export function Field({
       </label>
       {children}
       {hint && !error && <p className="mt-1 text-xs text-ash">{hint}</p>}
-      {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
+      {error && (
+        <p data-field-error className="mt-1 text-xs text-red-400">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -86,7 +118,7 @@ export function SubmitButton({ children }: { children: React.ReactNode }) {
   const pending = useContext(PendingContext);
   return (
     <button type="submit" className="btn btn-primary" disabled={pending}>
-      {pending ? "Saving…" : children}
+      {pending ? "Transmitting…" : children}
     </button>
   );
 }

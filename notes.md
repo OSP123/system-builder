@@ -70,3 +70,12 @@ Tasks:
 Follow-ups:
 - Incident: a screenshot cleanup step killed the process on port 3101, which was the user's Land of Nerds dev server; it needs restarting. Screenshot servers now use a free port and stop only their own PID.
 
+Date: 2026-10-14
+Tasks:
+- CMS save feedback in 40k terms for every form: "Record sanctified" / "Record inducted" (cogitator panel, auto-fades) and "Heresy detected" / "Access denied" / "Machine spirit unresponsive" (blood-red, stays until dismissed, scrolls to first error)
+- Unexpected server errors during save now return a failure notice instead of crashing the page (unstable_rethrow keeps redirects working)
+- e2e builds use their own dist dir (.next-e2e) so they don't collide with a running `npm run dev`
+- Verified: 76 Vitest + 5 Playwright tests passing; screenshots of both notices
+Follow-ups:
+- None
+

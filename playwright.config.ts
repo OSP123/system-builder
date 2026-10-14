@@ -10,7 +10,7 @@ export default defineConfig({
   use: { baseURL: `http://localhost:${PORT}`, screenshot: "only-on-failure" },
   webServer: {
     // Runs the production build against the test database.
-    command: `node --env-file=.env.test node_modules/next/dist/bin/next start -p ${PORT}`,
+    command: `NEXT_DIST_DIR=.next-e2e node --env-file=.env.test node_modules/next/dist/bin/next start -p ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: false,
     timeout: 60_000,

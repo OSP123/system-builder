@@ -36,15 +36,22 @@ test("characters, army list and narratives: build in the CMS, read in rulebook s
   await page.getByLabel("Wargear").fill("Guardian spear\nArtificer armour");
   await page.getByLabel("Published (visible to the public)").check();
   await page.getByRole("button", { name: "Create character" }).click();
-  await expect(page).toHaveURL(/\/characters\/[^/]+\?created=1/);
+  await expect(page).toHaveURL(/\/characters\/[^/?]+/);
+  await expect(page.getByRole("status")).toContainText("Record inducted");
+  await expect(page).not.toHaveURL(/created=1/);
 
   // Invalid characteristic is a field error, and typed values survive it
   await page.getByLabel("Hesaar WS").fill("<b>");
   await page.getByRole("button", { name: "Save character" }).click();
   await expect(page.getByText("Use numbers, D, +, -, / or *")).toBeVisible();
+  const failure = page.getByRole("alert").filter({ hasText: "Heresy detected" });
+  await expect(failure).toContainText("One field requires correction");
+  // Failures stay until dismissed
+  await page.getByRole("button", { name: "Dismiss" }).click();
+  await expect(page.getByText("Heresy detected")).toHaveCount(0);
   await page.getByLabel("Hesaar WS").fill("6");
   await page.getByRole("button", { name: "Save character" }).click();
-  await expect(page.getByRole("status")).toHaveText("Saved");
+  await expect(page.getByRole("status")).toContainText("Record sanctified");
 
   // Unit with model + vehicle profiles
   await page.getByRole("link", { name: "Army List", exact: true }).click();
@@ -63,7 +70,9 @@ test("characters, army list and narratives: build in the CMS, read in rulebook s
   await page.getByLabel("Rhino Front").fill("11");
   await page.getByLabel("Published (visible to the public)").check();
   await page.getByRole("button", { name: "Create unit" }).click();
-  await expect(page).toHaveURL(/\/units\/[^/]+\?created=1/);
+  await expect(page).toHaveURL(/\/units\/[^/?]+/);
+  await expect(page.getByRole("status")).toContainText("Record inducted");
+  await expect(page).not.toHaveURL(/created=1/);
 
   // Narrative featuring the character
   await page.getByRole("link", { name: "Narratives", exact: true }).click();
@@ -75,7 +84,9 @@ test("characters, army list and narratives: build in the CMS, read in rulebook s
   await page.getByLabel(/Hesaar/).check();
   await page.getByLabel("Published (visible to the public)").check();
   await page.getByRole("button", { name: "Create narrative" }).click();
-  await expect(page).toHaveURL(/\/narratives\/[^/]+\?created=1/);
+  await expect(page).toHaveURL(/\/narratives\/[^/?]+/);
+  await expect(page.getByRole("status")).toContainText("Record inducted");
+  await expect(page).not.toHaveURL(/created=1/);
 
   // Public: Dramatis Personae + character page
   await page.goto("/w/codex-world/characters");

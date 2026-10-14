@@ -46,7 +46,7 @@ test("admin builds a world end to end and it appears publicly", async ({ page })
   await page.locator("textarea#summary").fill("# The Reach\n\nWhere the Astronomican **falters**.");
   await page.getByLabel("Published (visible to the public)").check();
   await page.getByRole("button", { name: "Save world" }).click();
-  await expect(page.getByRole("status")).toHaveText("Saved");
+  await expect(page.getByRole("status")).toContainText("Record sanctified");
 
   // Create a lore record, check the markdown preview, then publish
   await page.getByRole("link", { name: "Lore", exact: true }).click();
@@ -60,7 +60,9 @@ test("admin builds a world end to end and it appears publicly", async ({ page })
   await expect(page.getByRole("heading", { name: "Prelude" })).toBeVisible();
   await page.getByLabel("Published (visible to the public)").check();
   await page.getByRole("button", { name: "Create record" }).click();
-  await expect(page).toHaveURL(/\/articles\/[^/]+\?created=1/);
+  await expect(page).toHaveURL(/\/articles\/[^/?]+/);
+  await expect(page.getByRole("status")).toContainText("Record inducted");
+  await expect(page).not.toHaveURL(/created=1/);
 
   // Duplicate slug should be a field error, not a crash
   await page.getByRole("link", { name: "← Lore" }).click();
@@ -98,7 +100,9 @@ test("admin builds a world end to end and it appears publicly", async ({ page })
   await expect(page.getByLabel("Name")).toHaveValue("Cerulea Prime");
   await page.getByLabel("Generator parameters (JSON, optional)").fill('{"seed": 42}');
   await page.getByRole("button", { name: "Create planet" }).click();
-  await expect(page).toHaveURL(/\/planets\/[^/]+\?created=1/);
+  await expect(page).toHaveURL(/\/planets\/[^/?]+/);
+  await expect(page.getByRole("status")).toContainText("Record inducted");
+  await expect(page).not.toHaveURL(/created=1/);
 
   // Public site
   await page.goto("/");

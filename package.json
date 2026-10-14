@@ -15,7 +15,7 @@
     "db:test:migrate": "dotenv run -f .env.test --override -- prisma migrate deploy",
     "postinstall": "prisma generate",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "next build && playwright test",
+    "test:e2e": "NEXT_DIST_DIR=.next-e2e next build && NEXT_DIST_DIR=.next-e2e playwright test",
     "db:import-lore": "tsx prisma/import-lore.ts",
     "start:render": "prisma migrate deploy && npm run db:seed && npm run db:import-lore && next start"
   },

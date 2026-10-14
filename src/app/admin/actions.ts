@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import type { z } from "zod";
 import { authenticate, createSession, destroySession, requireUser } from "@/lib/auth";
 import * as codex from "@/lib/codex-content";
@@ -41,7 +41,11 @@ async function mutate<S extends z.ZodType, R>(
   } catch (e) {
     if (e instanceof content.ContentError) return { ok: false, state: { errors: { [e.field]: e.message } } };
     if (e instanceof content.ForbiddenError) return { ok: false, state: { errors: { _form: e.message } } };
-    throw e;
+    // Let Next.js control-flow errors (redirect, notFound) through; report anything else
+    // as a failed save so the editor keeps the user's unsaved text.
+    unstable_rethrow(e);
+    console.error("Save failed", e);
+    return { ok: false, state: { errors: { _form: "The cogitator faltered while saving." } } };
   }
 }
 
