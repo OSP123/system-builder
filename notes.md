@@ -119,3 +119,12 @@ Follow-ups:
 - Set RESEND_API_KEY / EMAIL_FROM on Render; verify a domain in Resend
 - Free tier: uploaded images are lost on restart/deploy; free Postgres expires 30 days after creation
 
+Date: 2026-10-14
+Tasks:
+- Live login crashed: AUTH_SECRET missing on Render (service was created manually, so render.yaml's generated secret never applied); user to set it in the dashboard
+- Added a boot-time configuration check (src/lib/env-check.ts, `npm run check-env`) run first by `start` and `start:render`: fails with readable fixes for missing/short AUTH_SECRET, bad DATABASE_URL (incl. localhost in production), ADMIN_EMAIL, APP_URL, old Node; warns for ADMIN_PASSWORD, Resend and EMAIL_FROM; never prints secret values
+- Verified: 115 Vitest (9 new) + 7 Playwright; simulated Render's current config fails before migrations, passes once AUTH_SECRET is added
+- Note: a mistyped local simulation briefly ran start:render against the local dev DB; it made no changes (no pending migrations, admin unchanged, nothing created) and left no process running
+Follow-ups:
+- Set AUTH_SECRET on Render before deploying this (otherwise the deploy is rejected by the check, and the old version stays up)
+

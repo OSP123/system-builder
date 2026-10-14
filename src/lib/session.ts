@@ -12,7 +12,7 @@ export type SessionPayload = {
 function secretKey(): Uint8Array {
   const secret = process.env.AUTH_SECRET;
   if (!secret || secret.length < 32) {
-    throw new Error("AUTH_SECRET must be set and at least 32 characters long");
+    throw new Error("AUTH_SECRET must be set and at least 32 characters long. Generate one with `openssl rand -base64 32` and add it to the environment.");
   }
   return new TextEncoder().encode(secret);
 }

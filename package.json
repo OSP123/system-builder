@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "npm run check-env && next start",
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -17,7 +17,8 @@
     "typecheck": "tsc --noEmit",
     "test:e2e": "NEXT_DIST_DIR=.next-e2e next build && NEXT_DIST_DIR=.next-e2e playwright test",
     "db:import-lore": "tsx prisma/import-lore.ts",
-    "start:render": "prisma migrate deploy && npm run db:seed && npm run db:import-lore && next start"
+    "start:render": "npm run check-env && prisma migrate deploy && npm run db:seed && npm run db:import-lore && next start",
+    "check-env": "tsx scripts/check-env.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

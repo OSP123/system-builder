@@ -44,6 +44,10 @@ Put your symbol at `public/emblem.svg` (or `.png`, `.webp`, `.jpg`, `.avif`). It
 3. On every boot the service runs migrations, the admin seed (which creates the admin account if it's missing but never changes an existing password unless `ADMIN_RESET_PASSWORD=true`) and the lore import, then starts. Render health-checks `/api/health`.
 4. For password-reset emails, set `RESEND_API_KEY` and `EMAIL_FROM` in the Render dashboard.
 
+Before anything else, the start command runs a configuration check (`npm run check-env`). It stops the boot with a readable list if a required setting is missing or malformed (`DATABASE_URL`, `AUTH_SECRET` of 32+ characters, `ADMIN_EMAIL`), and logs warnings for optional ones (Resend, `APP_URL`). Render keeps the previous version running when a boot fails.
+
+If you created the service with **New → Web Service** instead of a Blueprint, `render.yaml` isn't applied, so nothing is generated for you. Set `AUTH_SECRET` yourself (`openssl rand -base64 32`), and use `npm run start:render` as the start command.
+
 Free-tier limits:
 - **Uploaded images are temporary.** There's no persistent disk, so uploads vanish on each deploy or restart. The CMS shows a warning banner. Text content lives in Postgres and is safe.
 - **Free Postgres expires after 30 days.**
