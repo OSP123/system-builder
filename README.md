@@ -45,6 +45,16 @@ To upgrade, follow the comment at the top of `render.yaml`: a Starter instance p
 
 To use your emblem in production, commit it to `public/`.
 
+## Characters, Army List and Narratives
+
+Three codex-style sections, presented like the 3rd edition rulebook: printed pages, black banners, Caslon text and black-header statlines.
+
+- **Characters** (`/w/<world>/characters`): Dramatis Personae, ordered by an importance number. Each has a title, faction, status, portrait, quote, optional statline, wargear, special rules, biography and homeworld.
+- **Army List** (`/w/<world>/units`): units grouped by Force Organisation slot, each with points, squad composition, model and/or vehicle profiles, wargear, options, special rules and background.
+- **Narratives** (`/w/<world>/narratives`): stories with an epigraph, cover art, featured characters and a setting. `##` headings become chapters in a table of contents.
+
+Each section has its own tab in the CMS. Shapes and parsing live in `src/lib/codex.ts`; mutations live in `src/lib/codex-content.ts`.
+
 ## Star system themes
 
 Each star system has a **Theme** section in the CMS: a preset (Imperial, Blood & Brass, Frost, Toxic, Warp-touched, Forge, Abyss, Ash), optional colour overrides, an atmosphere wash and an optional backdrop image. It applies to the system's page and all of its planets, with a live preview in the editor. Logic lives in `src/lib/theme.ts`.

@@ -66,3 +66,58 @@ export function getPublishedPlanet(worldId: string, systemSlug: string, planetSl
     },
   });
 }
+
+// ---------- Codex sections ----------
+
+export function getWorldCharacters(worldId: string) {
+  return db.character.findMany({
+    where: { worldId, published: true },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: { id: true, slug: true, name: true, title: true, faction: true, status: true, summary: true, portraitImage: true },
+  });
+}
+
+export function getPublishedCharacter(worldId: string, slug: string) {
+  return db.character.findFirst({
+    where: { worldId, slug, published: true },
+    include: {
+      portraitImage: true,
+      homeworld: { select: { slug: true, name: true, published: true, system: { select: { slug: true, published: true } } } },
+      narratives: { where: { published: true }, select: { slug: true, title: true, subtitle: true }, orderBy: { createdAt: "desc" } },
+    },
+  });
+}
+
+export function getWorldUnits(worldId: string) {
+  return db.unit.findMany({
+    where: { worldId, published: true },
+    orderBy: [{ slot: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
+  });
+}
+
+export function getPublishedUnit(worldId: string, slug: string) {
+  return db.unit.findFirst({ where: { worldId, slug, published: true }, include: { image: true } });
+}
+
+export function getWorldNarratives(worldId: string) {
+  return db.narrative.findMany({
+    where: { worldId, published: true },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, slug: true, title: true, subtitle: true, summary: true, epigraph: true, coverImage: true },
+  });
+}
+
+export function getPublishedNarrative(worldId: string, slug: string) {
+  return db.narrative.findFirst({
+    where: { worldId, slug, published: true },
+    include: {
+      coverImage: true,
+      planet: { select: { slug: true, name: true, published: true, system: { select: { slug: true, published: true } } } },
+      characters: {
+        where: { published: true },
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+        select: { slug: true, name: true, title: true, portraitImage: true },
+      },
+    },
+  });
+}

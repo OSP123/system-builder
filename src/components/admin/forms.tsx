@@ -1,4 +1,4 @@
-import type { Article, Planet, StarSystem, World } from "@prisma/client";
+import type { Article, Character, Narrative, Planet, StarSystem, Unit, World } from "@prisma/client";
 import type { ActionState } from "@/app/admin/actions";
 import { CATEGORIES, CATEGORY_LABELS } from "@/lib/categories";
 import { ActionForm, Field, PublishedToggle, SubmitButton } from "./ActionForm";
@@ -6,6 +6,10 @@ import { ImagePicker } from "./ImagePicker";
 import { MarkdownEditor } from "./MarkdownEditor";
 import { ThemeEditor } from "./ThemeEditor";
 import { normalizeTheme } from "@/lib/theme";
+import { CHARACTER_STATUSES, FORCE_SLOTS, readProfile, readProfiles, readRules, SLOT_LABELS, STATUS_LABELS } from "@/lib/codex";
+import { CharacterPicker } from "./CharacterPicker";
+import { ProfilesEditor } from "./ProfilesEditor";
+import { RulesEditor } from "./RulesEditor";
 
 type Action = (prev: ActionState, form: FormData) => Promise<ActionState>;
 
@@ -203,6 +207,193 @@ export function PlanetForm({ action, planet }: { action: Action; planet?: Planet
       </Field>
       <PublishedToggle defaultChecked={planet?.published} />
       <SubmitButton>{planet ? "Save planet" : "Create planet"}</SubmitButton>
+    </ActionForm>
+  );
+}
+
+type PlanetGroups = (Pick<StarSystem, "id" | "name"> & { planets: Pick<Planet, "id" | "name">[] })[];
+
+function PlanetSelect({ name, label, groups, value }: { name: string; label: string; groups: PlanetGroups; value?: string | null }) {
+  return (
+    <Field name={name} label={label}>
+      <select id={name} name={name} className="field" defaultValue={value ?? ""}>
+        <option value="">—</option>
+        {groups.map((s) => (
+          <optgroup key={s.id} label={s.name}>
+            {s.planets.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+    </Field>
+  );
+}
+
+const ORDER_HINT = "Lower numbers are listed first.";
+
+export function CharacterForm({ action, character, planets }: { action: Action; character?: Character; planets: PlanetGroups }) {
+  const profile = readProfile(character?.profile);
+  return (
+    <ActionForm action={action}>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Field name="name" label="Name">
+          <input id="name" name="name" className="field" defaultValue={character?.name} required />
+        </Field>
+        <Field name="title" label="Rank or title">
+          <input id="title" name="title" className="field" defaultValue={character?.title ?? ""} placeholder="Custodian Captain" />
+        </Field>
+        <Field name="faction" label="Faction / allegiance">
+          <input id="faction" name="faction" className="field" defaultValue={character?.faction ?? ""} placeholder="Adeptus Custodes" />
+        </Field>
+        <Field name="status" label="Status">
+          <select id="status" name="status" className="field" defaultValue={character?.status ?? "ACTIVE"}>
+            {CHARACTER_STATUSES.map((st) => (
+              <option key={st} value={st}>{STATUS_LABELS[st]}</option>
+            ))}
+          </select>
+        </Field>
+        <Field name="slug" label="Slug" hint={SLUG_HINT}>
+          <input id="slug" name="slug" className="field" defaultValue={character?.slug} />
+        </Field>
+        <Field name="sortOrder" label="Importance order" hint={ORDER_HINT}>
+          <input id="sortOrder" name="sortOrder" type="number" className="field" defaultValue={character?.sortOrder ?? 0} />
+        </Field>
+      </div>
+      <Field name="summary" label="Summary" hint="One line shown in the Dramatis Personae.">
+        <input id="summary" name="summary" className="field" defaultValue={character?.summary ?? ""} />
+      </Field>
+      <div className="grid gap-6 sm:grid-cols-[2fr_1fr]">
+        <Field name="quote" label="Quote">
+          <textarea id="quote" name="quote" rows={2} className="field" defaultValue={character?.quote ?? ""} />
+        </Field>
+        <Field name="quoteSource" label="Quote attribution">
+          <input id="quoteSource" name="quoteSource" className="field" defaultValue={character?.quoteSource ?? ""} />
+        </Field>
+      </div>
+      <Field name="portraitImageId" label="Portrait">
+        <ImagePicker name="portraitImageId" defaultValue={character?.portraitImageId} />
+      </Field>
+      <Field name="body" label="Biography (Markdown)">
+        <MarkdownEditor name="body" defaultValue={character?.body} rows={14} />
+      </Field>
+      <PlanetSelect name="homeworldId" label="Homeworld (optional)" groups={planets} value={character?.homeworldId} />
+      <Field name="profile" label="Statline (optional)">
+        <ProfilesEditor name="profile" initial={profile ? [profile] : []} single />
+      </Field>
+      <Field name="wargear" label="Wargear" hint="One item per line.">
+        <textarea id="wargear" name="wargear" rows={4} className="field" defaultValue={character?.wargear.join("\n")} />
+      </Field>
+      <Field name="specialRules" label="Special rules">
+        <RulesEditor name="specialRules" initial={readRules(character?.specialRules)} />
+      </Field>
+      <PublishedToggle defaultChecked={character?.published} />
+      <SubmitButton>{character ? "Save character" : "Create character"}</SubmitButton>
+    </ActionForm>
+  );
+}
+
+export function UnitForm({ action, unit }: { action: Action; unit?: Unit }) {
+  return (
+    <ActionForm action={action}>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Field name="name" label="Unit name">
+          <input id="name" name="name" className="field" defaultValue={unit?.name} required />
+        </Field>
+        <Field name="slot" label="Force Organisation slot">
+          <select id="slot" name="slot" className="field" defaultValue={unit?.slot ?? "TROOPS"}>
+            {FORCE_SLOTS.map((sl) => (
+              <option key={sl} value={sl}>{SLOT_LABELS[sl]}</option>
+            ))}
+          </select>
+        </Field>
+        <Field name="points" label="Points" hint="Free text, e.g. 15 pts/model or 120 pts.">
+          <input id="points" name="points" className="field" defaultValue={unit?.points ?? ""} />
+        </Field>
+        <Field name="faction" label="Faction">
+          <input id="faction" name="faction" className="field" defaultValue={unit?.faction ?? ""} placeholder="Sons of Cerulean" />
+        </Field>
+        <Field name="slug" label="Slug" hint={SLUG_HINT}>
+          <input id="slug" name="slug" className="field" defaultValue={unit?.slug} />
+        </Field>
+        <Field name="sortOrder" label="Order within slot" hint={ORDER_HINT}>
+          <input id="sortOrder" name="sortOrder" type="number" className="field" defaultValue={unit?.sortOrder ?? 0} />
+        </Field>
+      </div>
+      <Field name="squad" label="Squad composition">
+        <textarea id="squad" name="squad" rows={2} className="field" defaultValue={unit?.squad ?? ""} placeholder="The squad consists of a Sergeant and between 4 and 9 Battle-Brothers." />
+      </Field>
+      <Field name="profiles" label="Profiles">
+        <ProfilesEditor name="profiles" initial={readProfiles(unit?.profiles)} />
+      </Field>
+      <Field name="wargear" label="Wargear" hint="One item per line.">
+        <textarea id="wargear" name="wargear" rows={4} className="field" defaultValue={unit?.wargear.join("\n")} />
+      </Field>
+      <Field name="options" label="Options (Markdown)" hint="Upgrades and their costs, e.g. a bulleted list.">
+        <textarea id="options" name="options" rows={5} className="field font-mono text-sm" defaultValue={unit?.options ?? ""} />
+      </Field>
+      <Field name="specialRules" label="Special rules">
+        <RulesEditor name="specialRules" initial={readRules(unit?.specialRules)} />
+      </Field>
+      <Field name="imageId" label="Art">
+        <ImagePicker name="imageId" defaultValue={unit?.imageId} />
+      </Field>
+      <Field name="description" label="Background (Markdown)">
+        <MarkdownEditor name="description" defaultValue={unit?.description} rows={12} />
+      </Field>
+      <PublishedToggle defaultChecked={unit?.published} />
+      <SubmitButton>{unit ? "Save unit" : "Create unit"}</SubmitButton>
+    </ActionForm>
+  );
+}
+
+export function NarrativeForm({
+  action,
+  narrative,
+  planets,
+  characters,
+}: {
+  action: Action;
+  narrative?: Narrative & { characters: { id: string }[] };
+  planets: PlanetGroups;
+  characters: { id: string; name: string; title: string | null }[];
+}) {
+  return (
+    <ActionForm action={action}>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Field name="title" label="Title">
+          <input id="title" name="title" className="field" defaultValue={narrative?.title} required />
+        </Field>
+        <Field name="subtitle" label="Subtitle">
+          <input id="subtitle" name="subtitle" className="field" defaultValue={narrative?.subtitle ?? ""} />
+        </Field>
+      </div>
+      <Field name="slug" label="Slug" hint={SLUG_HINT}>
+        <input id="slug" name="slug" className="field" defaultValue={narrative?.slug} />
+      </Field>
+      <div className="grid gap-6 sm:grid-cols-[2fr_1fr]">
+        <Field name="epigraph" label="Epigraph" hint="An opening quote, rulebook style.">
+          <textarea id="epigraph" name="epigraph" rows={2} className="field" defaultValue={narrative?.epigraph ?? ""} />
+        </Field>
+        <Field name="epigraphSource" label="Epigraph attribution">
+          <input id="epigraphSource" name="epigraphSource" className="field" defaultValue={narrative?.epigraphSource ?? ""} />
+        </Field>
+      </div>
+      <Field name="summary" label="Summary" hint="Shown in the list of narratives.">
+        <input id="summary" name="summary" className="field" defaultValue={narrative?.summary ?? ""} />
+      </Field>
+      <Field name="coverImageId" label="Cover art">
+        <ImagePicker name="coverImageId" defaultValue={narrative?.coverImageId} />
+      </Field>
+      <Field name="body" label="Story (Markdown)" hint="Use ## for chapter headings; they become the table of contents.">
+        <MarkdownEditor name="body" defaultValue={narrative?.body} rows={24} />
+      </Field>
+      <Field name="characterIds" label="Featured characters">
+        <CharacterPicker name="characterIds" options={characters} initial={narrative?.characters.map((c) => c.id) ?? []} />
+      </Field>
+      <PlanetSelect name="planetId" label="Setting (optional)" groups={planets} value={narrative?.planetId} />
+      <PublishedToggle defaultChecked={narrative?.published} />
+      <SubmitButton>{narrative ? "Save narrative" : "Create narrative"}</SubmitButton>
     </ActionForm>
   );
 }

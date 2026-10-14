@@ -154,12 +154,21 @@ export type StubSpec = { title: string; slug: string; category: ArticleCategory;
  * to fill in via the CMS. Created once and never overwritten by the importer.
  */
 export const CERULEAN_STUBS: StubSpec[] = [
-  { title: "Custodian Captain Hesaar", slug: "hesaar", category: "CHARACTER", summary: "Custodian Captain of Cerulean, at the head of the Cerulean Council." },
-  { title: "Legion Master Strone", slug: "strone", category: "CHARACTER", summary: "Legion Master of the Sons of Cerulean." },
-  { title: "Arch Magos Tarketh", slug: "tarketh", category: "CHARACTER", summary: "Arch Magos of the Cult of Mars on Cerulean." },
-  { title: "Imperial Commander Versus", slug: "versus", category: "CHARACTER", summary: "Imperial Commander of Cerulean." },
-  { title: "Syl", slug: "syl", category: "CHARACTER", summary: "The first of the ancient humans awakened from cryogenic stasis." },
   { title: "Sons of Cerulean", slug: "sons-of-cerulean", category: "CHAPTER", summary: "The Space Marine legion forged from the companies of the original 18 chapters." },
   { title: "The Citadel", slug: "the-citadel", category: "LOCATION", summary: "Fortress bastion at the heart of the Imperium-held continent, seat of the Cerulean Council." },
   { title: "Rust", slug: "rust", category: "LOCATION", summary: "An island whose shores are fused with millennia of rusted shipwrecks." },
+];
+
+export type CharacterStub = { name: string; title: string | null; faction: string; slug: string; summary: string; sortOrder: number };
+
+/**
+ * Characters named in the lore, created once as empty drafts in the
+ * Characters section. (Earlier versions stored these as CHARACTER articles.)
+ */
+export const CERULEAN_CHARACTERS: CharacterStub[] = [
+  { name: "Hesaar", title: "Custodian Captain", faction: "Adeptus Custodes", slug: "hesaar", sortOrder: 1, summary: "Custodian Captain of Cerulean, at the head of the Cerulean Council." },
+  { name: "Strone", title: "Legion Master", faction: "Sons of Cerulean", slug: "strone", sortOrder: 2, summary: "Legion Master of the Sons of Cerulean." },
+  { name: "Tarketh", title: "Arch Magos", faction: "Adeptus Mechanicus", slug: "tarketh", sortOrder: 3, summary: "Arch Magos of the Cult of Mars on Cerulean." },
+  { name: "Versus", title: "Imperial Commander", faction: "Imperium of Man", slug: "versus", sortOrder: 4, summary: "Imperial Commander of Cerulean." },
+  { name: "Syl", title: null, faction: "Old Humans", slug: "syl", sortOrder: 5, summary: "The first of the ancient humans awakened from cryogenic stasis." },
 ];

@@ -4,16 +4,20 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { z } from "zod";
 import { authenticate, createSession, destroySession, requireUser } from "@/lib/auth";
+import * as codex from "@/lib/codex-content";
 import * as content from "@/lib/content";
 import { db } from "@/lib/db";
 import { deleteImage } from "@/lib/storage";
 import {
   articleSchema,
+  characterSchema,
   flattenErrors,
   formToObject,
   loginSchema,
+  narrativeSchema,
   planetSchema,
   systemSchema,
+  unitSchema,
   worldSchema,
   type FieldErrors,
 } from "@/lib/validation";
@@ -168,4 +172,67 @@ export async function deleteMedia(mediaId: string) {
   await db.media.delete({ where: { id: mediaId } });
   await deleteImage(media.key);
   revalidatePath(`/admin/worlds/${media.worldId}/media`);
+}
+
+// ---------- Characters ----------
+
+export async function createCharacter(worldId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
+  const r = await mutate(characterSchema, form, (u, d) => codex.createCharacter(u, worldId, d));
+  if (!r.ok) return r.state;
+  redirect(`/admin/worlds/${worldId}/characters/${r.result.id}?created=1`);
+}
+
+export async function updateCharacter(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
+  const r = await mutate(characterSchema, form, (u, d) => codex.updateCharacter(u, id, d));
+  if (!r.ok) return r.state;
+  revalidatePath("/w", "layout");
+  return { saved: true };
+}
+
+export async function deleteCharacter(worldId: string, id: string) {
+  const user = await requireUser();
+  await codex.deleteCharacter(user, id);
+  redirect(`/admin/worlds/${worldId}/characters`);
+}
+
+// ---------- Army list ----------
+
+export async function createUnit(worldId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
+  const r = await mutate(unitSchema, form, (u, d) => codex.createUnit(u, worldId, d));
+  if (!r.ok) return r.state;
+  redirect(`/admin/worlds/${worldId}/units/${r.result.id}?created=1`);
+}
+
+export async function updateUnit(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
+  const r = await mutate(unitSchema, form, (u, d) => codex.updateUnit(u, id, d));
+  if (!r.ok) return r.state;
+  revalidatePath("/w", "layout");
+  return { saved: true };
+}
+
+export async function deleteUnit(worldId: string, id: string) {
+  const user = await requireUser();
+  await codex.deleteUnit(user, id);
+  redirect(`/admin/worlds/${worldId}/units`);
+}
+
+// ---------- Narratives ----------
+
+export async function createNarrative(worldId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
+  const r = await mutate(narrativeSchema, form, (u, d) => codex.createNarrative(u, worldId, d));
+  if (!r.ok) return r.state;
+  redirect(`/admin/worlds/${worldId}/narratives/${r.result.id}?created=1`);
+}
+
+export async function updateNarrative(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
+  const r = await mutate(narrativeSchema, form, (u, d) => codex.updateNarrative(u, id, d));
+  if (!r.ok) return r.state;
+  revalidatePath("/w", "layout");
+  return { saved: true };
+}
+
+export async function deleteNarrative(worldId: string, id: string) {
+  const user = await requireUser();
+  await codex.deleteNarrative(user, id);
+  redirect(`/admin/worlds/${worldId}/narratives`);
 }

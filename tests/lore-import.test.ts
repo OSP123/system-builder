@@ -63,3 +63,11 @@ describe("corrected spellings", () => {
     expect(text).not.toContain(bad);
   });
 });
+
+describe("CERULEAN_CHARACTERS", () => {
+  it("uses the corrected spellings and has no character stubs left in the article list", async () => {
+    const { CERULEAN_CHARACTERS, CERULEAN_STUBS } = await import("@/lib/lore-import");
+    expect(CERULEAN_CHARACTERS.map((c) => c.name)).toEqual(["Hesaar", "Strone", "Tarketh", "Versus", "Syl"]);
+    expect(CERULEAN_STUBS.some((s) => s.category === "CHARACTER")).toBe(false);
+  });
+});

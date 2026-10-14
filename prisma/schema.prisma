@@ -30,6 +30,23 @@ enum ArticleCategory {
   OTHER
 }
 
+enum CharacterStatus {
+  ACTIVE
+  DECEASED
+  MISSING
+  UNKNOWN
+}
+
+/// Force Organisation slots, as in the 3rd edition army lists.
+enum ForceSlot {
+  HQ
+  ELITES
+  TROOPS
+  FAST_ATTACK
+  HEAVY_SUPPORT
+  TRANSPORT
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -56,6 +73,9 @@ model World {
   coverImage   Media?       @relation("WorldCover", fields: [coverImageId], references: [id], onDelete: SetNull)
   articles     Article[]
   systems      StarSystem[]
+  characters   Character[]
+  units        Unit[]
+  narratives   Narrative[]
   media        Media[]      @relation("WorldMedia")
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
@@ -112,45 +132,139 @@ model StarSystem {
 }
 
 model Planet {
-  id             String     @id @default(cuid())
+  id             String      @id @default(cuid())
   systemId       String
-  system         StarSystem @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  system         StarSystem  @relation(fields: [systemId], references: [id], onDelete: Cascade)
   slug           String
   name           String
   /// Imperial classification, e.g. "Hive World", "Forge World", "Death World".
   classification String?
-  description    String?    @db.Text
-  orbitIndex     Int        @default(0)
+  description    String?     @db.Text
+  orbitIndex     Int         @default(0)
   population     String?
   titheGrade     String?
   /// Parameters for the future procedural 3D planet renderer (seed, palette,
   /// water level, cloud cover, etc). Schema intentionally left open.
   genParams      Json?
-  published      Boolean    @default(false)
+  published      Boolean     @default(false)
   coverImageId   String?
-  coverImage     Media?     @relation("PlanetCover", fields: [coverImageId], references: [id], onDelete: SetNull)
+  coverImage     Media?      @relation("PlanetCover", fields: [coverImageId], references: [id], onDelete: SetNull)
   articles       Article[]
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  natives        Character[] @relation("CharacterHomeworld")
+  narratives     Narrative[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   @@unique([systemId, slug])
 }
 
 model Media {
-  id              String       @id @default(cuid())
-  worldId         String?
-  world           World?       @relation("WorldMedia", fields: [worldId], references: [id], onDelete: SetNull)
+  id                 String       @id @default(cuid())
+  worldId            String?
+  world              World?       @relation("WorldMedia", fields: [worldId], references: [id], onDelete: SetNull)
   /// Storage key (filename inside UPLOAD_DIR, or object key once on S3/R2).
-  key             String       @unique
-  originalName    String
-  mimeType        String
-  size            Int
-  alt             String?
-  uploadedById    String
-  uploadedBy      User         @relation(fields: [uploadedById], references: [id])
-  createdAt       DateTime     @default(now())
-  worldCovers     World[]      @relation("WorldCover")
-  articleCovers   Article[]    @relation("ArticleCover")
-  planetCovers    Planet[]     @relation("PlanetCover")
-  systemBackdrops StarSystem[] @relation("SystemBackdrop")
+  key                String       @unique
+  originalName       String
+  mimeType           String
+  size               Int
+  alt                String?
+  uploadedById       String
+  uploadedBy         User         @relation(fields: [uploadedById], references: [id])
+  createdAt          DateTime     @default(now())
+  worldCovers        World[]      @relation("WorldCover")
+  articleCovers      Article[]    @relation("ArticleCover")
+  planetCovers       Planet[]     @relation("PlanetCover")
+  systemBackdrops    StarSystem[] @relation("SystemBackdrop")
+  characterPortraits Character[]  @relation("CharacterPortrait")
+  unitImages         Unit[]       @relation("UnitImage")
+  narrativeCovers    Narrative[]  @relation("NarrativeCover")
+}
+
+/// A notable person of the world: "Dramatis Personae".
+model Character {
+  id              String          @id @default(cuid())
+  worldId         String
+  world           World           @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  slug            String
+  name            String
+  /// Rank or honorific shown before/under the name, e.g. "Custodian Captain".
+  title           String?
+  faction         String?
+  status          CharacterStatus @default(ACTIVE)
+  quote           String?
+  quoteSource     String?
+  summary         String?
+  body            String          @default("") @db.Text
+  /// Optional single statline (see src/lib/codex.ts StatProfile).
+  profile         Json?
+  wargear         String[]        @default([])
+  /// [{ name, description }]
+  specialRules    Json?
+  /// Lower numbers list first; lets the author rank importance.
+  sortOrder       Int             @default(0)
+  published       Boolean         @default(false)
+  portraitImageId String?
+  portraitImage   Media?          @relation("CharacterPortrait", fields: [portraitImageId], references: [id], onDelete: SetNull)
+  homeworldId     String?
+  homeworld       Planet?         @relation("CharacterHomeworld", fields: [homeworldId], references: [id], onDelete: SetNull)
+  narratives      Narrative[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@unique([worldId, slug])
+  @@index([worldId, sortOrder])
+}
+
+/// A custom army list entry.
+model Unit {
+  id           String    @id @default(cuid())
+  worldId      String
+  world        World     @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  slug         String
+  name         String
+  faction      String?
+  slot         ForceSlot @default(TROOPS)
+  /// Free text, e.g. "15 pts/model" or "120 pts".
+  points       String?
+  /// Unit composition, e.g. "The squad consists of 5 to 10 Space Marines."
+  squad        String?
+  /// [StatProfile]
+  profiles     Json      @default("[]")
+  wargear      String[]  @default([])
+  options      String?   @db.Text
+  specialRules Json?
+  description  String    @default("") @db.Text
+  sortOrder    Int       @default(0)
+  published    Boolean   @default(false)
+  imageId      String?
+  image        Media?    @relation("UnitImage", fields: [imageId], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([worldId, slug])
+  @@index([worldId, slot, sortOrder])
+}
+
+/// A piece of fiction set in the world.
+model Narrative {
+  id             String      @id @default(cuid())
+  worldId        String
+  world          World       @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  slug           String
+  title          String
+  subtitle       String?
+  epigraph       String?
+  epigraphSource String?
+  summary        String?
+  body           String      @default("") @db.Text
+  published      Boolean     @default(false)
+  coverImageId   String?
+  coverImage     Media?      @relation("NarrativeCover", fields: [coverImageId], references: [id], onDelete: SetNull)
+  planetId       String?
+  planet         Planet?     @relation(fields: [planetId], references: [id], onDelete: SetNull)
+  characters     Character[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@unique([worldId, slug])
 }

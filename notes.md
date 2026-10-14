@@ -53,3 +53,13 @@ Follow-ups:
 - Push to GitHub and create the Render Blueprint (needs user's account decisions and Render login)
 - Render costs: Starter web (~$7/mo) + basic-256mb Postgres (~$6/mo)
 
+Date: 2026-10-14
+Tasks:
+- Added Characters (Dramatis Personae), Army List (units by Force Org slot) and Narratives sections: Prisma models, validation, permission-checked mutations, CMS tabs/forms (statline, special-rule and featured-character editors), public pages
+- 3rd edition rulebook design system: printed-page panels, notched black banners, Caslon type, black-header statlines (model + vehicle armour), dotted points leaders, boxed sidebars, B&W art, narrative contents with chapter anchors
+- Moved the Hesaar/Strone/Tarketh/Versus/Syl drafts from lore articles into Characters (importer migrates on boot; keeps any non-empty article)
+- Verified: 72 Vitest + 5 Playwright tests passing; screenshots desktop/mobile, no console errors or overflow
+Follow-ups:
+- Merge feature/codex-sections to main to deploy (Render runs migrations on boot)
+- Character drafts are unpublished; fill in and publish
+

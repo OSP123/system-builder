@@ -19,6 +19,9 @@ export default async function WorldLayout({
         <span className="text-blood-bright">✠</span>
         <Link href={`/w/${world.slug}`} className="text-parchment">{world.name}</Link>
         <Link href={`/w/${world.slug}`}>Lore</Link>
+        <Link href={`/w/${world.slug}/characters`}>Characters</Link>
+        <Link href={`/w/${world.slug}/units`}>Army List</Link>
+        <Link href={`/w/${world.slug}/narratives`}>Narratives</Link>
         <Link href={`/w/${world.slug}/systems`}>Star Systems</Link>
       </SiteHeader>
       <main className="mx-auto max-w-6xl px-4 pt-10">{children}</main>

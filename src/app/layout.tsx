@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Grenze_Gotisch, IM_Fell_English, IM_Fell_English_SC, Inter, Share_Tech_Mono } from "next/font/google";
+import { Grenze_Gotisch, IM_Fell_English, IM_Fell_English_SC, Inter, Libre_Caslon_Text, Share_Tech_Mono } from "next/font/google";
 import "./globals.css";
 
 const grenze = Grenze_Gotisch({ variable: "--font-grenze", subsets: ["latin"] });
 const fellSc = IM_Fell_English_SC({ variable: "--font-fellsc", subsets: ["latin"], weight: "400" });
 const fell = IM_Fell_English({ variable: "--font-fell", subsets: ["latin"], weight: "400", style: ["normal", "italic"] });
 const techMono = Share_Tech_Mono({ variable: "--font-techmono", subsets: ["latin"], weight: "400" });
+const caslon = Libre_Caslon_Text({ variable: "--font-caslon", subsets: ["latin"], weight: ["400", "700"], style: ["normal", "italic"] });
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -33,7 +34,7 @@ function InkFilters() {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const fonts = [grenze, fellSc, fell, techMono, inter].map((f) => f.variable).join(" ");
+  const fonts = [grenze, fellSc, fell, techMono, caslon, inter].map((f) => f.variable).join(" ");
   return (
     // Font variables live on <html> so theme tokens defined at :root can resolve them.
     <html lang="en" className={fonts}>

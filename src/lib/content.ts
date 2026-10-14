@@ -23,7 +23,7 @@ export class ForbiddenError extends Error {
   }
 }
 
-type Actor = Pick<User, "id" | "role">;
+export type Actor = Pick<User, "id" | "role">;
 type WorldInput = z.output<typeof worldSchema>;
 type ArticleInput = z.output<typeof articleSchema>;
 type SystemInput = z.output<typeof systemSchema>;
@@ -41,7 +41,7 @@ export function editableWorldsWhere(actor: Actor): Prisma.WorldWhereInput {
 }
 
 /** Translate unique-constraint failures on slug into a friendly field error. */
-async function guardSlug<T>(fn: () => Promise<T>): Promise<T> {
+export async function guardSlug<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch (e) {
@@ -52,7 +52,7 @@ async function guardSlug<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
-async function assertMediaInWorld(mediaId: string | null | undefined, worldId: string, field = "coverImageId") {
+export async function assertMediaInWorld(mediaId: string | null | undefined, worldId: string, field = "coverImageId") {
   if (!mediaId) return;
   const media = await db.media.findUnique({ where: { id: mediaId }, select: { worldId: true } });
   if (!media || (media.worldId !== null && media.worldId !== worldId)) {

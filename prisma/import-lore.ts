@@ -8,7 +8,7 @@
 import "dotenv/config";
 import { readFileSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
-import { CERULEAN_SECTIONS, CERULEAN_STUBS, parseLoreSections } from "../src/lib/lore-import";
+import { CERULEAN_CHARACTERS, CERULEAN_SECTIONS, CERULEAN_STUBS, parseLoreSections } from "../src/lib/lore-import";
 
 const db = new PrismaClient();
 const force = process.argv.includes("--force");
@@ -89,6 +89,37 @@ async function main() {
     });
     stubs++;
   }
+
+  // Characters: create-once drafts. If an older CHARACTER article stub exists,
+  // carry its summary/body over; delete it only when it is still an empty draft.
+  let characters = 0;
+  for (const c of CERULEAN_CHARACTERS) {
+    const old = await db.article.findUnique({ where: { worldId_slug: { worldId: world.id, slug: c.slug } } });
+    const exists = await db.character.findUnique({ where: { worldId_slug: { worldId: world.id, slug: c.slug } } });
+    if (!exists) {
+      await db.character.create({
+        data: {
+          worldId: world.id,
+          slug: c.slug,
+          name: c.name,
+          title: c.title,
+          faction: c.faction,
+          sortOrder: c.sortOrder,
+          summary: old?.summary ?? c.summary,
+          body: old?.body ?? "",
+          published: false,
+          homeworldId: planet.id,
+        },
+      });
+      characters++;
+    }
+    if (old && old.category === "CHARACTER" && !old.published && old.body.trim() === "") {
+      await db.article.delete({ where: { id: old.id } });
+    } else if (old && old.category === "CHARACTER") {
+      console.log(`Kept article "${old.title}" (it has content or is published); its text was copied to the character.`);
+    }
+  }
+  console.log(`Characters: ${characters} created.`);
 
   // Fill the world overview only if it hasn't been written in the CMS yet.
   if (!world.summary || force) {

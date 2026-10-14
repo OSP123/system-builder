@@ -26,6 +26,7 @@
   --font-serif: var(--font-fell), Georgia, serif;
   --font-mono: var(--font-techmono), ui-monospace, monospace;
   --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-book: var(--font-caslon), "Book Antiqua", Georgia, serif;
 }
 
 html {
@@ -325,3 +326,214 @@ a:hover .grim-image,
 .btn-ghost:hover { border-color: var(--color-rust); color: #e8dcc0; }
 .btn-danger { border: 1px solid var(--color-blood); color: #d36b5f; }
 .btn-danger:hover { background: var(--color-blood); color: white; }
+
+/* ==========================================================================
+   Rulebook pages: after the 3rd edition rulebook and codexes. Printed,
+   off-white pages with heavy black rules, black notched banners, Caslon text
+   in two columns, black-header statlines and black-and-white art.
+   ========================================================================== */
+
+.rulebook-page {
+  --ink: #15110d;
+  --paper: #e6dcc3;
+  position: relative;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(ellipse at 50% 40%, transparent 55%, rgba(92, 64, 30, 0.28) 100%),
+    radial-gradient(ellipse 40% 30% at 85% 10%, rgba(120, 85, 40, 0.12), transparent 70%),
+    radial-gradient(ellipse 35% 25% at 10% 90%, rgba(120, 85, 40, 0.14), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.27 0 0 0 0 0.15 0 0 0 0.22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+  border: 4px solid var(--ink);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 24px 60px rgba(0, 0, 0, 0.85);
+  font-family: var(--font-book);
+  padding: 2.25rem 1.25rem 2.5rem;
+}
+@media (min-width: 640px) {
+  .rulebook-page { padding: 3rem 3rem 3.25rem; }
+}
+/* Inner hairline rule, like the printed page frame. */
+.rulebook-page::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid var(--ink);
+  pointer-events: none;
+}
+.rulebook-page ::selection { background: #7a1010; color: #f3ecd9; }
+
+/* Black banner with notched ends. */
+.rulebook-banner {
+  display: block;
+  background: #15110d;
+  color: #efe6cf;
+  font-family: var(--font-book);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  text-align: center;
+  padding: 0.55rem 2.25rem;
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 14px 100%, 0 50%);
+}
+.rulebook-banner-lg { font-size: clamp(1.4rem, 3.5vw, 2.2rem); padding: 0.7rem 3rem; }
+
+/* Section heading inside a page: bold caps over a heavy rule. */
+.rulebook-h {
+  font-family: var(--font-book);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 2px solid #15110d;
+  padding-bottom: 0.15em;
+  margin-bottom: 0.6em;
+}
+
+.rulebook-label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.85em;
+}
+
+/* Dotted leader between an entry name and its points cost. */
+.rulebook-leader {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.rulebook-leader > .dots {
+  flex: 1;
+  border-bottom: 2px dotted #15110d;
+  transform: translateY(-0.3em);
+  min-width: 1.5rem;
+}
+
+.rulebook-columns { column-gap: 2.5rem; }
+@media (min-width: 900px) {
+  .rulebook-columns { column-count: 2; column-rule: 1px solid rgba(21, 17, 13, 0.3); }
+}
+.rulebook-columns > * { break-inside: avoid-column; }
+.rulebook-columns h2, .rulebook-columns h3 { break-after: avoid-column; }
+
+/* Statline table. */
+.statline {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-book);
+  font-size: 0.95rem;
+  text-align: center;
+}
+.statline th {
+  background: #15110d;
+  color: #efe6cf;
+  font-weight: 700;
+  padding: 0.3em 0.45em;
+  letter-spacing: 0.04em;
+}
+.statline td {
+  border-bottom: 1px solid #15110d;
+  padding: 0.35em 0.45em;
+}
+.statline th:first-child, .statline td:first-child { text-align: left; }
+.statline td:first-child { font-weight: 700; }
+.statline tbody tr:nth-child(even) td { background: rgba(21, 17, 13, 0.06); }
+
+/* Boxed sidebar with a black header strip. */
+.rulebook-sidebar {
+  border: 2px solid #15110d;
+  background: rgba(21, 17, 13, 0.07);
+}
+.rulebook-sidebar > .head {
+  background: #15110d;
+  color: #efe6cf;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+}
+
+/* Black-and-white art plates. */
+.rulebook-art {
+  filter: grayscale(1) contrast(1.2) brightness(0.95);
+  border: 3px solid #15110d;
+  background: #15110d;
+}
+
+/* Flavour quotes in the rulebook manner. */
+.rulebook-quote {
+  font-style: italic;
+  text-align: center;
+  font-size: 1.1rem;
+  line-height: 1.55;
+}
+.rulebook-quote cite {
+  display: block;
+  margin-top: 0.4em;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Markdown on a rulebook page. */
+.prose-rulebook {
+  font-family: var(--font-book);
+  font-size: 1.02rem;
+  line-height: 1.62;
+  color: #15110d;
+  text-align: justify;
+  hyphens: auto;
+}
+.prose-rulebook > * + * { margin-top: 0.85em; }
+.prose-rulebook h1, .prose-rulebook h2, .prose-rulebook h3 {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-align: left;
+  margin-top: 1.4em;
+  line-height: 1.2;
+}
+.prose-rulebook h1 { font-size: 1.35rem; }
+.prose-rulebook h2 { font-size: 1.15rem; border-bottom: 2px solid #15110d; padding-bottom: 0.12em; }
+.prose-rulebook h3 { font-size: 1rem; }
+.prose-rulebook a { color: #7a1010; text-decoration: underline; text-underline-offset: 2px; }
+.prose-rulebook strong { font-weight: 700; }
+.prose-rulebook ul { list-style: none; padding-left: 1.1em; text-align: left; }
+.prose-rulebook ul > li { position: relative; }
+.prose-rulebook ul > li::before { content: "•"; position: absolute; left: -0.9em; font-weight: 700; }
+.prose-rulebook ol { list-style: decimal; padding-left: 1.5em; }
+.prose-rulebook blockquote {
+  font-style: italic;
+  border-left: 4px solid #15110d;
+  padding: 0.2em 0 0.2em 1em;
+  text-align: left;
+}
+.prose-rulebook img { filter: grayscale(1) contrast(1.2); border: 3px solid #15110d; max-width: 100%; }
+.prose-rulebook hr { border: 0; border-top: 2px solid #15110d; margin: 1.6em 0; }
+.prose-rulebook table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.prose-rulebook th { background: #15110d; color: #efe6cf; padding: 0.3em 0.5em; text-align: left; }
+.prose-rulebook td { border-bottom: 1px solid #15110d; padding: 0.3em 0.5em; }
+.prose-rulebook.dropcap > p:first-of-type::first-letter {
+  float: left;
+  font-family: var(--font-gothic);
+  font-weight: 900;
+  font-size: 4.2em;
+  line-height: 0.8;
+  padding: 0.04em 0.1em 0 0;
+  color: #7a1010;
+}
+
+/* Headings always start below a floated drop cap. */
+.prose-rulebook h1, .prose-rulebook h2, .prose-rulebook h3,
+.prose-lore h1, .prose-lore h2, .prose-lore h3 { clear: both; }
+
+/* Fit a full 9-column statline on a phone. */
+@media (max-width: 480px) {
+  .statline { font-size: 0.78rem; }
+  .statline th, .statline td { padding: 0.3em 0.15em; }
+  .statline th:first-child, .statline td:first-child { max-width: 6.5rem; }
+}
