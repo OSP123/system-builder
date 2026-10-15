@@ -45,9 +45,11 @@ export function GalaxyScene({ systems, worlds, overlays, reducedMotion, starCoun
   const aspect = useThree((s) => s.size.width / Math.max(1, s.size.height));
   const shot = useMemo<Shot>(() => {
     // The default framing fits a landscape screen; widen it for portrait ones.
-    const k = aspect < 1 ? Math.min(2.1, 1.15 / aspect) : 1;
-    const [x, y, z] = GALAXY_SHOT.position;
-    return { position: [x, y * k, z * k], target: GALAXY_SHOT.target };
+    if (aspect >= 1) return GALAXY_SHOT;
+    // Portrait: no side panel to make room for, so centre on the core and pull back to fit the disc.
+    const k = Math.min(1.9, 1.0 / aspect);
+    const [, y, z] = GALAXY_SHOT.position;
+    return { position: [0, y * k, z * k], target: [0, 0, 4] };
   }, [aspect]);
   const colorOf = useMemo(() => new Map(worlds.map((w) => [w.slug, w.color])), [worlds]);
 

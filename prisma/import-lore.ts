@@ -55,10 +55,13 @@ async function main() {
     },
   });
 
-  // Place Cerulean on the galaxy map (southern fringe, Segmentum Tempestus) only
-  // while its coordinates are still the unset default.
-  if (system.x === 0 && system.y === 0 && system.z === 0) {
-    await db.starSystem.update({ where: { id: system.id }, data: { x: -6_000, y: 300, z: 44_000 } });
+  // Place Cerulean on the galaxy map: southern rim, Segmentum Tempestus, due south of Terra.
+  // Only while the position is unset, or still the earlier default from before the map's
+  // positions were corrected to the lore; a position chosen in the CMS is never moved.
+  const unset = system.x === 0 && system.y === 0 && system.z === 0;
+  const oldDefault = system.x === -6_000 && system.y === 300 && system.z === 44_000;
+  if (unset || oldDefault) {
+    await db.starSystem.update({ where: { id: system.id }, data: { x: -12_000, y: 300, z: 46_000 } });
     console.log("Placed the Cerulean system on the galaxy map (Segmentum Tempestus).");
   }
   // "Large, pristine blue oceans" with floating island continents, unless a look was already chosen.

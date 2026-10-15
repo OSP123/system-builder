@@ -60,7 +60,7 @@ export default async function WorldPage({ params, searchParams }: Props) {
             </h2>
           </div>
           {category && (
-            <Link href={`/w/${world.slug}`} className="btn btn-ghost">
+            <Link href={`/w/${world.slug}`} className="tap btn btn-ghost">
               ← All records
             </Link>
           )}

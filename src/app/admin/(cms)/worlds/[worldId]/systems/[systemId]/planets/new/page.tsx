@@ -13,7 +13,7 @@ export default async function NewPlanetPage({ params }: { params: Promise<{ worl
   return (
     <div className="max-w-3xl">
       <div className="mb-6 flex items-center gap-4">
-        <Link href={`/admin/worlds/${world.id}/systems/${system.id}`} className="text-sm text-ash hover:text-parchment">← {system.name}</Link>
+        <Link href={`/admin/worlds/${world.id}/systems/${system.id}`} className="tap text-sm text-ash hover:text-parchment">← {system.name}</Link>
         <h2 className="font-display text-2xl">New planet</h2>
       </div>
       <PlanetForm action={createPlanet.bind(null, world.id, system.id)} />

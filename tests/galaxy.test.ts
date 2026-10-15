@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   bearing,
   GALAXY_RADIUS_LY,
+  GREAT_RIFT_PATH,
+  sideOfRift,
+  SOLAR_RADIUS_LY,
   LANDMARKS,
   segmentumAt,
   SEGMENTUM_LABEL_POSITIONS,
@@ -68,15 +71,71 @@ describe("galactic coordinates", () => {
     expect(segmentumAt(at("ultramar").x, at("ultramar").z)).toBe("Ultima");
   });
 
-  it("places Cerulean (as seeded) on the southern fringe in Segmentum Tempestus", () => {
-    expect(segmentumAt(-6_000, 44_000)).toBe("Tempestus");
-    expect(Math.hypot(-6_000, 44_000)).toBeGreaterThan(GALAXY_RADIUS_LY * 0.85);
+  it("places Cerulean (as seeded) on the southern rim in Segmentum Tempestus", () => {
+    expect(segmentumAt(-12_000, 46_000)).toBe("Tempestus");
+    expect(Math.hypot(-12_000, 46_000)).toBeGreaterThan(GALAXY_RADIUS_LY * 0.9);
+    expect(sideOfRift(-12_000, 46_000)).toBe("Imperium Sanctus");
   });
 
   it("draws wedge boundaries from the Solar ring out past the rim", () => {
     const [start, end] = wedgeBoundaryLine(90);
-    expect(Math.hypot(start.x - TERRA.x, start.z - TERRA.z)).toBeCloseTo(16_000, -1);
+    expect(Math.hypot(start.x - TERRA.x, start.z - TERRA.z)).toBeCloseTo(SOLAR_RADIUS_LY, -1);
     expect(Math.hypot(end.x, end.z)).toBeGreaterThanOrEqual(GALAXY_RADIUS_LY);
+  });
+});
+
+describe("lore geography", () => {
+  const at = (id: string) => LANDMARKS.find((l) => l.id === id)!;
+
+  it("puts the galactic core in Ultima Segmentum, east of Terra", () => {
+    expect(segmentumAt(0, 0)).toBe("Ultima");
+    expect(TERRA.x).toBeLessThan(0);
+  });
+
+  it("puts the Eye of Terror in Obscurus, north and west of Terra, near the galaxy's edge", () => {
+    const eye = at("eye");
+    expect(segmentumAt(eye.x, eye.z)).toBe("Obscurus");
+    expect(eye.x).toBeLessThan(TERRA.x);
+    expect(eye.z).toBeLessThan(TERRA.z);
+    expect(Math.hypot(eye.x, eye.z)).toBeGreaterThan(GALAXY_RADIUS_LY * 0.85);
+  });
+
+  it("puts the Maelstrom in Ultima, between Segmentum Solar's border and the core", () => {
+    const m = at("maelstrom");
+    expect(segmentumAt(m.x, m.z)).toBe("Ultima");
+    const fromTerra = Math.hypot(m.x - TERRA.x, m.z - TERRA.z);
+    expect(fromTerra).toBeLessThan(Math.hypot(TERRA.x, TERRA.z)); // closer to Terra than the core is
+    expect(Math.hypot(m.x, m.z)).toBeLessThan(Math.hypot(TERRA.x, TERRA.z));
+  });
+
+  it("puts Baal, Ultramar, the Ghoul Stars and Hadex in Ultima, in the right quarters", () => {
+    for (const id of ["baal", "ultramar", "ghoul", "hadex"]) expect(segmentumAt(at(id).x, at(id).z)).toBe("Ultima");
+    const ghoul = at("ghoul");
+    expect(ghoul.x).toBeGreaterThan(0); // east
+    expect(ghoul.z).toBeLessThan(0); // north
+    expect(at("ultramar").z).toBeGreaterThan(0); // south-east
+  });
+
+  it("splits the Imperium along the Great Rift as the lore has it", () => {
+    expect(sideOfRift(TERRA.x, TERRA.z)).toBe("Imperium Sanctus");
+    expect(sideOfRift(at("ultramar").x, at("ultramar").z)).toBe("Imperium Sanctus");
+    expect(sideOfRift(at("maelstrom").x, at("maelstrom").z)).toBe("Imperium Sanctus");
+    expect(sideOfRift(at("baal").x, at("baal").z)).toBe("Imperium Nihilus");
+    // Most of Segmentum Obscurus lies beyond the Rift
+    const o = SEGMENTUM_LABEL_POSITIONS.Obscurus;
+    expect(sideOfRift(o.x, o.z)).toBe("Imperium Nihilus");
+  });
+
+  it("runs the Rift from the Eye of Terror to the Hadex Anomaly, west to east", () => {
+    const first = GREAT_RIFT_PATH[0];
+    const last = GREAT_RIFT_PATH[GREAT_RIFT_PATH.length - 1];
+    expect(first).toEqual({ x: at("eye").x, z: at("eye").z });
+    expect(last).toEqual({ x: at("hadex").x, z: at("hadex").z });
+    for (let i = 1; i < GREAT_RIFT_PATH.length; i++) expect(GREAT_RIFT_PATH[i].x).toBeGreaterThan(GREAT_RIFT_PATH[i - 1].x);
+  });
+
+  it("keeps every landmark inside the galaxy", () => {
+    for (const l of LANDMARKS) expect(Math.hypot(l.x, l.z)).toBeLessThanOrEqual(GALAXY_RADIUS_LY);
   });
 });
 

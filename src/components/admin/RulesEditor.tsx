@@ -21,7 +21,7 @@ export function RulesEditor({ name, initial }: { name: string; initial: SpecialR
               onChange={(e) => update(i, { name: e.target.value })}
               className="field py-1"
             />
-            <button type="button" onClick={() => setRules((rs) => rs.filter((_, j) => j !== i))} className="text-xs text-red-400 hover:text-red-300">
+            <button type="button" onClick={() => setRules((rs) => rs.filter((_, j) => j !== i))} className="tap text-xs text-red-400 hover:text-red-300">
               Remove
             </button>
           </div>

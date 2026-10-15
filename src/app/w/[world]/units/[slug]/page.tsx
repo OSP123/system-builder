@@ -30,7 +30,7 @@ export default async function UnitPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <Link href={`/w/${world.slug}/units`} className="rubric hover:text-gold-bright">← Army List</Link>
+      <Link href={`/w/${world.slug}/units`} className="tap rubric hover:text-gold-bright">← Army List</Link>
       <RulebookPage>
         <p className="mb-2 text-center text-sm font-bold uppercase tracking-[0.2em]">
           {[SLOT_LABELS[u.slot], u.faction].filter(Boolean).join(" · ")}
@@ -47,7 +47,7 @@ export default async function UnitPage({ params }: Props) {
 
         <div className="rulebook-sidebar mt-10">
           <p className="head">Army List Entry</p>
-          <div className="p-4">
+          <div className="p-3 sm:p-4">
             <ArmyEntry
               name={u.name}
               points={u.points}

@@ -125,8 +125,8 @@ export function SubmitButton({ children }: { children: React.ReactNode }) {
 
 export function PublishedToggle({ defaultChecked }: { defaultChecked?: boolean }) {
   return (
-    <label className="flex items-center gap-2 text-sm">
-      <input type="checkbox" name="published" defaultChecked={defaultChecked} className="h-4 w-4 accent-cerulean" />
+    <label className="flex min-h-11 items-center gap-2 text-sm">
+      <input type="checkbox" name="published" defaultChecked={defaultChecked} className="h-5 w-5 accent-cerulean" />
       Published (visible to the public)
     </label>
   );

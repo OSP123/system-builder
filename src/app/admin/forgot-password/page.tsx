@@ -9,7 +9,7 @@ export default function ForgotPasswordPage() {
     <AuthCard subtitle="Recover access">
       <ForgotForm />
       <p className="mt-6 text-center text-sm">
-        <Link href="/admin/login" className="text-ash hover:text-parchment">← Back to sign in</Link>
+        <Link href="/admin/login" className="tap text-ash hover:text-parchment">← Back to sign in</Link>
       </p>
     </AuthCard>
   );

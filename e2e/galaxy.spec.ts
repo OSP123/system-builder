@@ -30,7 +30,7 @@ test("galaxy map: chart a system, then fly from galaxy to system to planet", asy
   await page.getByLabel("Star type").fill("Blue giant");
   await page.getByLabel("X (east +)").fill("-6000");
   await page.getByLabel("Z (south +)").fill("44000");
-  await expect(page.getByText("Segmentum Tempestus ·")).toBeVisible(); // live readout in the CMS
+  await expect(page.getByText(/Segmentum Tempestus · Imperium Sanctus/)).toBeVisible(); // live readout in the CMS
   await page.getByLabel("Published (visible to the public)").check();
   await page.getByRole("button", { name: "Create system" }).click();
   await expect(page.getByRole("status")).toContainText("Record inducted");

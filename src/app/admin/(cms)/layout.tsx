@@ -11,22 +11,23 @@ export default async function CmsLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen">
       <header className="border-b border-line bg-void/95">
-                <div className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-3">
-          <Link href="/admin" className="flex items-center gap-3">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-1 px-4 py-2 sm:py-3">
+          <Link href="/admin" className="flex items-center gap-3 py-1">
             <Emblem className="h-7 w-auto" />
             <span className="gothic-title text-3xl">{SITE.name}</span>
-            <span className="font-mono text-xs uppercase tracking-[0.3em] text-phosphor/80">{"// Administratum"}</span>
+            <span className="hidden font-mono text-xs uppercase tracking-[0.3em] text-phosphor/80 sm:inline">{"// Administratum"}</span>
           </Link>
-          <Link href="/" className="text-sm text-ash hover:text-gold-bright" target="_blank">View site ↗</Link>
-          <div className="ml-auto flex items-center gap-4 font-mono text-xs uppercase tracking-widest text-ash">
+          <Link href="/" className="py-2 text-sm text-ash hover:text-gold-bright" target="_blank">View site ↗</Link>
+          {/* Second row on phones */}
+          <div className="flex w-full min-w-0 items-center gap-4 font-mono text-xs uppercase tracking-widest text-ash sm:ml-auto sm:w-auto">
             {user.role === "ADMIN" && (
-              <Link href="/admin/users" className="hover:text-gold-bright">Users</Link>
+              <Link href="/admin/users" className="py-2 hover:text-gold-bright">Users</Link>
             )}
-            <Link href="/admin/account" className="hover:text-gold-bright" title={user.email}>
+            <Link href="/admin/account" className="min-w-0 truncate py-2 hover:text-gold-bright" title={user.email}>
               {user.name || user.email}
             </Link>
-            <form action={logout}>
-              <button type="submit" className="uppercase hover:text-blood-bright">Sign out</button>
+            <form action={logout} className="ml-auto sm:ml-0">
+              <button type="submit" className="whitespace-nowrap py-2 uppercase hover:text-blood-bright">Sign out</button>
             </form>
           </div>
         </div>

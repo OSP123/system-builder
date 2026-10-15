@@ -156,3 +156,13 @@ Follow-ups:
 - Merge feature/galaxy-map and push to deploy
 - Possible next steps: place systems by clicking on the map in the CMS; richer planet generator controls
 
+Date: 2026-10-15
+Tasks:
+- Galaxy map deployed (build zfqLVXE81R3n9wiM9HDEp); verified /galaxy live
+- Corrected galaxy geography to the lore: core in Ultima east of Sol (Terra now west of the core), smaller Segmentum Solar, Maelstrom between Solar's border and the core, Eye of Terror at the north-western edge, Cadia added, Ghoul Stars north-east, Baal beyond the Rift (Imperium Nihilus), Ultramar south-east on Terra's side, Hadex Anomaly at the Rift's eastern end; Rift runs north of Terra. Lore checks are unit-tested; panel and CMS show Imperium Sanctus/Nihilus. Importer moves Cerulean to the corrected spot only if still unset or at the previous default
+- Responsive pass: audited 33 page types at 375px and 360px; fixed CMS header overflow, home splatter overflow, table overflow (secondary columns hidden on phones), swipeable header nav and CMS tabs with edge fade, Army List points wrapping, tap targets >= 24px (tap utility, taller labels, sliders), galaxy label level-of-detail and portrait framing; updated the planet generator hint
+- Added e2e/responsive.spec.ts guarding every page type against sideways scroll and small tap targets
+- Verified: 142 Vitest + 10 Playwright passing; screenshots phone and desktop
+Follow-ups:
+- Merge fix/galaxy-lore-positions and push to deploy
+

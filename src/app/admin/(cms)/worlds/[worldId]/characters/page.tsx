@@ -24,17 +24,17 @@ export default async function CharactersAdminPage({ params }: { params: Promise<
       ) : (
         <table className="w-full text-sm">
           <thead className="text-left text-xs uppercase tracking-widest text-ash">
-            <tr><th className="py-2">#</th><th>Name</th><th>Status</th><th>Author</th><th>Visibility</th></tr>
+            <tr><th className="hidden sm:table-cell py-2">#</th><th className="py-2">Name</th><th className="hidden sm:table-cell">Status</th><th>Author</th><th>Visibility</th></tr>
           </thead>
           <tbody>
             {characters.map((c) => (
               <tr key={c.id} className="border-t border-line">
-                <td className="py-3 text-ash">{c.sortOrder}</td>
-                <td>
-                  <Link href={`${base}/${c.id}`} className="text-parchment hover:text-gold-bright">{c.name}</Link>
+                <td className="hidden sm:table-cell py-3 text-ash">{c.sortOrder}</td>
+                <td className="py-3">
+                  <Link href={`${base}/${c.id}`} className="tap text-parchment hover:text-gold-bright">{c.name}</Link>
                   {c.title && <span className="block text-xs text-ash">{c.title}</span>}
                 </td>
-                <td className="text-ash">{STATUS_LABELS[c.status]}</td>
+                <td className="hidden sm:table-cell text-ash">{STATUS_LABELS[c.status]}</td>
                 <td className="text-xs"><AuthorTag author={c.author} currentUserId={user.id} /></td>
                 <td><StatusBadge published={c.published} /></td>
               </tr>

@@ -39,7 +39,7 @@ export default async function SystemsPage({ params }: Props) {
                   {s.planets.map((p) => (
                     <li key={p.slug}>
                       &gt;{" "}
-                      <Link href={`/w/${world.slug}/systems/${s.slug}/${p.slug}`}>{p.name}</Link>
+                      <Link href={`/w/${world.slug}/systems/${s.slug}/${p.slug}`} className="tap">{p.name}</Link>
                       {p.classification && <span className="opacity-70"> [{p.classification}]</span>}
                     </li>
                   ))}

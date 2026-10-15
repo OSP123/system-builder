@@ -11,6 +11,7 @@ import {
   SEGMENTUM_LABEL_POSITIONS,
   SEGMENTUM_LABELS,
   segmentumAt,
+  sideOfRift,
   toScene,
   type Segmentum,
 } from "@/lib/galaxy/coords";
@@ -308,7 +309,7 @@ function Crumb({ children, active, onClick }: { children: React.ReactNode; activ
 
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <label className="flex cursor-pointer items-center gap-1.5 text-parchment">
+    <label className="flex min-h-7 cursor-pointer items-center gap-1.5 text-parchment">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="accent-blood-bright" />
       {label}
     </label>
@@ -421,6 +422,7 @@ function SystemPanel({
           }
         />
         <Fact k="Coordinates (ly)" v={`${system.x.toLocaleString()}, ${system.y.toLocaleString()}, ${system.z.toLocaleString()}`} />
+        <Fact k="After the Great Rift" v={sideOfRift(system.x, system.z)} />
       </dl>
       <section>
         <h2 className="mb-2 font-display text-xs uppercase tracking-[0.25em] text-gold">Planetary bodies</h2>
@@ -473,6 +475,13 @@ function PlanetPanel({ planet, system, onBack }: { planet: MapPlanet; system: Ma
 
 const SEGMENTA = Object.keys(SEGMENTUM_LABEL_POSITIONS) as Segmentum[];
 
+/**
+ * Segmentum, landmark and Rift names show only within this camera distance
+ * (scene units). The default desktop view is inside it; the zoomed-out phone
+ * view is not, so small screens start uncluttered and gain detail on zoom.
+ */
+const REFERENCE_LABEL_RANGE = 150;
+
 function galaxyAnchors(systems: MapSystem[]): Map<string, THREE.Vector3> {
   const m = new Map<string, THREE.Vector3>();
   for (const s of SEGMENTA) {
@@ -494,7 +503,7 @@ const LANDMARK_STYLE: Record<string, string> = {
 };
 
 const labelButton =
-  "pointer-events-auto border border-line bg-void/80 px-2 py-0.5 font-display text-xs tracking-[0.12em] text-parchment hover:border-gold hover:text-gold-bright";
+  "pointer-events-auto border border-line bg-void/80 px-2 py-1 font-display text-xs tracking-[0.12em] text-parchment hover:border-gold hover:text-gold-bright";
 
 function MapLabels({
   bus,
@@ -523,21 +532,21 @@ function MapLabels({
       {view === "galaxy" && (
         <>
           {SEGMENTA.map((s) => (
-            <MapLabel key={s} bus={bus} id={`seg:${s}`} hidden={!overlays.segmenta || !overlays.labels}>
+            <MapLabel key={s} bus={bus} id={`seg:${s}`} hidden={!overlays.segmenta || !overlays.labels} maxDistance={REFERENCE_LABEL_RANGE}>
               <span className="font-display text-[9px] uppercase tracking-[0.3em] text-gold/80 [text-shadow:0_0_6px_#000] sm:text-[11px] sm:tracking-[0.35em]">
                 {SEGMENTUM_LABELS[s]}
               </span>
             </MapLabel>
           ))}
           {LANDMARKS.map((l) => (
-            <MapLabel key={l.id} bus={bus} id={`lm:${l.id}`} hidden={!overlays.labels}>
+            <MapLabel key={l.id} bus={bus} id={`lm:${l.id}`} hidden={!overlays.labels} maxDistance={l.kind === "terra" ? undefined : REFERENCE_LABEL_RANGE}>
               <span className={`block pb-2 font-display text-[9px] tracking-[0.1em] [text-shadow:0_0_6px_#000] sm:text-[11px] sm:tracking-[0.12em] ${LANDMARK_STYLE[l.kind]}`}>
                 {l.kind === "terra" ? "✠ " : ""}
                 {l.name}
               </span>
             </MapLabel>
           ))}
-          <MapLabel bus={bus} id="rift" hidden={!overlays.rift || !overlays.labels}>
+          <MapLabel bus={bus} id="rift" hidden={!overlays.rift || !overlays.labels} maxDistance={REFERENCE_LABEL_RANGE}>
             <span className="font-display text-[11px] uppercase tracking-[0.3em] text-[#e06aa8] [text-shadow:0_0_6px_#000]">
               Cicatrix Maledictum
             </span>

@@ -25,7 +25,7 @@ export default async function WorldAdminLayout({
         <h1 className="gothic-title text-5xl">{world.name}</h1>
         <StatusBadge published={world.published} />
         {world.published && (
-          <Link href={`/w/${world.slug}`} target="_blank" className="ml-auto text-sm text-cerulean-bright hover:underline">
+          <Link href={`/w/${world.slug}`} target="_blank" className="tap ml-auto text-sm text-cerulean-bright hover:underline">
             View public page ↗
           </Link>
         )}

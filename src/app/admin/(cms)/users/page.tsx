@@ -16,7 +16,7 @@ export default async function UsersPage() {
       </div>
       <table className="w-full text-sm">
         <thead className="text-left text-xs uppercase tracking-widest text-ash">
-          <tr><th className="py-2">User</th><th>Role</th><th>Status</th><th>Records</th></tr>
+          <tr><th className="py-2">User</th><th>Role</th><th>Status</th><th className="hidden sm:table-cell">Records</th></tr>
         </thead>
         <tbody>
           {users.map((u) => {
@@ -25,7 +25,7 @@ export default async function UsersPage() {
             return (
               <tr key={u.id} className="border-t border-line">
                 <td className="py-3">
-                  <Link href={`/admin/users/${u.id}`} className="text-parchment hover:text-gold-bright">{u.name || u.email}</Link>
+                  <Link href={`/admin/users/${u.id}`} className="tap text-parchment hover:text-gold-bright">{u.name || u.email}</Link>
                   {u.name && <span className="block text-xs text-ash">{u.email}</span>}
                   {u.id === me.id && <span className="text-xs text-phosphor">(you)</span>}
                 </td>
@@ -37,7 +37,7 @@ export default async function UsersPage() {
                     <span className="font-mono text-[11px] uppercase tracking-widest text-phosphor">Active</span>
                   )}
                 </td>
-                <td className="text-ash">
+                <td className="hidden sm:table-cell text-ash">
                   {records}
                   {c.worlds > 0 && ` · ${c.worlds} world${c.worlds === 1 ? "" : "s"}`}
                 </td>

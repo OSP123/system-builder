@@ -23,7 +23,7 @@ export default async function EditUserPage({
   return (
     <div className="max-w-2xl space-y-10">
       <div>
-        <Link href="/admin/users" className="text-sm text-ash hover:text-parchment">← Users</Link>
+        <Link href="/admin/users" className="tap text-sm text-ash hover:text-parchment">← Users</Link>
         <h1 className="mt-2 font-display text-3xl">{user.name || user.email}</h1>
         <p className="text-sm text-ash">{user.email}</p>
       </div>

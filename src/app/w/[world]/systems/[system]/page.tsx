@@ -30,7 +30,7 @@ export default async function SystemPage({ params }: Props) {
   return (
     <ThemeScope theme={system.theme} backdrop={system.backdropImage}>
     <div className="mx-auto max-w-4xl">
-      <Link href={`${base}/systems`} className="rubric hover:text-gold-bright">← Star Systems</Link>
+      <Link href={`${base}/systems`} className="tap rubric hover:text-gold-bright">← Star Systems</Link>
       <h1 className="gothic-title mt-3 text-5xl sm:text-6xl">{system.name} System</h1>
       <p className="mt-3 font-mono text-xs uppercase tracking-[0.3em] text-phosphor/80">
         +++ {[system.starType, system.segmentum].filter(Boolean).join(" // ") || "Uncatalogued"} +++

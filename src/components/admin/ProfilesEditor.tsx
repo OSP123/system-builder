@@ -43,7 +43,7 @@ export function ProfilesEditor({ name, initial, single = false }: Props) {
                 onChange={(e) => update(i, "name", e.target.value)}
                 className="field max-w-xs py-1"
               />
-              <button type="button" onClick={() => remove(i)} className="ml-auto text-xs text-red-400 hover:text-red-300">
+              <button type="button" onClick={() => remove(i)} className="tap ml-auto text-xs text-red-400 hover:text-red-300">
                 Remove
               </button>
             </div>

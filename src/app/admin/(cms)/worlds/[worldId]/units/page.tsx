@@ -24,14 +24,14 @@ export default async function UnitsAdminPage({ params }: { params: Promise<{ wor
       ) : (
         <table className="w-full text-sm">
           <thead className="text-left text-xs uppercase tracking-widest text-ash">
-            <tr><th className="py-2">Unit</th><th>Slot</th><th>Points</th><th>Author</th><th>Visibility</th></tr>
+            <tr><th className="py-2">Unit</th><th className="hidden sm:table-cell">Slot</th><th className="hidden sm:table-cell">Points</th><th>Author</th><th>Visibility</th></tr>
           </thead>
           <tbody>
             {units.map((u) => (
               <tr key={u.id} className="border-t border-line">
-                <td className="py-3"><Link href={`${base}/${u.id}`} className="text-parchment hover:text-gold-bright">{u.name}</Link></td>
-                <td className="text-ash">{SLOT_LABELS[u.slot]}</td>
-                <td className="text-ash">{u.points ?? "—"}</td>
+                <td className="py-3"><Link href={`${base}/${u.id}`} className="tap text-parchment hover:text-gold-bright">{u.name}</Link></td>
+                <td className="hidden sm:table-cell text-ash">{SLOT_LABELS[u.slot]}</td>
+                <td className="hidden sm:table-cell text-ash">{u.points ?? "—"}</td>
                 <td className="text-xs"><AuthorTag author={u.author} currentUserId={user.id} /></td>
                 <td><StatusBadge published={u.published} /></td>
               </tr>

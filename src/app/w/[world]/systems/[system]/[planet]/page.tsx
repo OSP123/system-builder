@@ -37,7 +37,7 @@ export default async function PlanetPage({ params }: Props) {
   return (
     <ThemeScope theme={planet.system.theme} backdrop={planet.system.backdropImage}>
     <div className="mx-auto max-w-5xl">
-      <Link href={`${base}/systems/${planet.system.slug}`} className="rubric hover:text-gold-bright">
+      <Link href={`${base}/systems/${planet.system.slug}`} className="tap rubric hover:text-gold-bright">
         ← {planet.system.name} System
       </Link>
       <div className="mt-4 grid gap-10 md:grid-cols-[1fr_300px]">

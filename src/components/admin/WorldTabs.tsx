@@ -16,12 +16,12 @@ export function WorldTabs({ worldId }: { worldId: string }) {
     { href: `${base}/media`, label: "Media", active: pathname.startsWith(`${base}/media`) },
   ];
   return (
-    <nav className="flex flex-wrap gap-1 border-b border-line">
+    <nav className="scroll-fade -mx-4 flex gap-1 overflow-x-auto border-b border-line px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
       {tabs.map((t) => (
         <Link
           key={t.href}
           href={t.href}
-          className={`-mb-px border-b-2 px-4 py-2 font-display text-xs uppercase tracking-[0.2em] ${t.active ? "border-blood-bright text-gold-bright" : "border-transparent text-ash hover:text-parchment"}`}
+          className={`-mb-px shrink-0 whitespace-nowrap border-b-2 px-4 py-3 font-display text-xs uppercase tracking-[0.2em] ${t.active ? "border-blood-bright text-gold-bright" : "border-transparent text-ash hover:text-parchment"}`}
         >
           {t.label}
         </Link>

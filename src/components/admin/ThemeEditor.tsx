@@ -63,7 +63,7 @@ export function ThemeEditor({ initial, systemName }: { initial: SystemTheme; sys
                     onChange={(e) => setColor(k, e.target.value)}
                     className="h-9 w-14 cursor-pointer border border-line bg-transparent disabled:cursor-not-allowed disabled:opacity-40"
                   />
-                  <label className="flex items-center gap-2 text-sm">
+                  <label className="flex min-h-8 items-center gap-2 text-sm">
                     <input
                       type="checkbox"
                       checked={custom}
@@ -91,7 +91,7 @@ export function ThemeEditor({ initial, systemName }: { initial: SystemTheme; sys
               max={100}
               value={theme.atmosphereStrength}
               onChange={(e) => setTheme((t) => ({ ...t, atmosphereStrength: Number(e.target.value) }))}
-              className="w-full accent-blood-bright"
+              className="h-6 w-full accent-blood-bright"
             />
           </Field>
           <Field name="themeBackdropOpacity" label={`Backdrop image opacity: ${theme.backdropOpacity}%`}>
@@ -103,7 +103,7 @@ export function ThemeEditor({ initial, systemName }: { initial: SystemTheme; sys
               max={100}
               value={theme.backdropOpacity}
               onChange={(e) => setTheme((t) => ({ ...t, backdropOpacity: Number(e.target.value) }))}
-              className="w-full accent-blood-bright"
+              className="h-6 w-full accent-blood-bright"
             />
           </Field>
         </div>

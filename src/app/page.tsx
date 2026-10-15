@@ -17,7 +17,7 @@ export default async function Home() {
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4">
         <section className="relative pb-14 pt-16 text-center">
-          <InkSplatter seed={7} className="pointer-events-none absolute left-1/2 top-4 -z-10 h-[420px] w-[420px] -translate-x-1/2 text-blood/40" />
+          <InkSplatter seed={7} className="pointer-events-none absolute left-1/2 top-4 -z-10 h-[min(420px,100vw)] w-[min(420px,100vw)] -translate-x-1/2 text-blood/40" />
           <Emblem className="mx-auto h-28 w-auto" />
           <p className="mt-6 font-mono text-xs uppercase tracking-[0.45em] text-blood-bright">+++ {SITE.tagline} +++</p>
           <h1 className="gothic-title mt-5 text-6xl sm:text-8xl">Worlds Beyond the Astronomican</h1>

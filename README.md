@@ -71,13 +71,13 @@ Each section has its own tab in the CMS. Shapes and parsing live in `src/lib/cod
 
 `/galaxy` is a 3D map of the Milky Way in the 41st millennium, shared by every published world (filter by world, colour-coded). Three levels:
 
-- **Galaxy:** a procedurally generated barred spiral (about 80,000 stars), with the Segmenta, Holy Terra, the Astronomican's reach and landmarks (Eye of Terror, Maelstrom, Ultramar, Baal, Ghoul Stars). The Great Rift is a toggle, off by default (it opens at the very end of M41).
+- **Galaxy:** a procedurally generated barred spiral (about 80,000 stars), with the Segmenta, Holy Terra, the Astronomican's reach and landmarks (Eye of Terror, Cadia, Maelstrom, Baal, Ultramar, Ghoul Stars, Hadex Anomaly). The Great Rift is a toggle, off by default (it opens at the very end of M41).
 - **System:** the star, coloured and sized from its star type, with the published planets orbiting at their orbital positions.
 - **Planet:** a rotating procedural globe.
 
 The address bar tracks the level (`/galaxy?system=…&planet=…`), so links can be shared and Back works. A systems index in the side panel covers keyboard, screen-reader and no-WebGL use. Motion is reduced when the visitor's device asks for it.
 
-**Coordinates** on a star system are light-years from the galactic core: +X east, +Z south (map north is −Z), +Y above the plane. Holy Terra is at 0, 0, 26,000; the galaxy is about 50,000 ly in radius. The CMS shows which Segmentum a position falls in as you type. Landmark, Segmentum and Rift positions are approximate and live in `src/lib/galaxy/coords.ts`.
+**Coordinates** on a star system are light-years from the galactic core: +X east, +Z south (map north is −Z), +Y above the plane. The core lies in Ultima Segmentum, east of Sol, so Holy Terra is at −18,000, 0, 5,000; the galaxy is about 50,000 ly in radius. The Great Rift runs from the Eye of Terror (north-west) to the Hadex Anomaly (east), with Terra and Ultramar on the Imperium Sanctus side and Baal in the Imperium Nihilus. The CMS shows which Segmentum a position falls in as you type. Landmark, Segmentum and Rift positions are approximate and live in `src/lib/galaxy/coords.ts`.
 
 **Planet looks** come from the classification (Hive, Forge, Agri, Death, Ocean, Ice, Desert, Daemon, Dead, Shrine…). A planet's *Generator parameters* JSON overrides any of: `seed`, `water`, `clouds`, `ice`, `lights`, `lava` (all 0–1), `detail`, `size`, `atmosphere`, `atmosphereStrength`, `cloudColor`, `lightsColor`, and `palette` (`deep`, `shallow`, `low`, `mid`, `high`, `peak` as `#rrggbb`). For example: `{"water": 0.9, "clouds": 0.3, "palette": {"deep": "#0a3a6b"}}`.
 

@@ -31,7 +31,7 @@ export default async function NarrativePage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <Link href={`${base}/narratives`} className="rubric hover:text-gold-bright">← Narratives</Link>
+      <Link href={`${base}/narratives`} className="tap rubric hover:text-gold-bright">← Narratives</Link>
       <RulebookPage>
         {n.coverImage && <MediaImage media={n.coverImage} className="rulebook-art mb-8 w-full" />}
         <Banner large as="h1">{n.title}</Banner>
@@ -54,7 +54,7 @@ export default async function NarrativePage({ params }: Props) {
                 <ol className="space-y-1">
                   {chapters.map((c) => (
                     <li key={c.id} className={c.level === 3 ? "pl-3 text-sm" : "font-bold"}>
-                      <a href={`#${c.id}`} className="hover:text-[#7a1010] hover:underline">{c.text}</a>
+                      <a href={`#${c.id}`} className="tap hover:text-[#7a1010] hover:underline">{c.text}</a>
                     </li>
                   ))}
                 </ol>
@@ -65,7 +65,7 @@ export default async function NarrativePage({ params }: Props) {
                 <ul className="space-y-2">
                   {n.characters.map((c) => (
                     <li key={c.slug}>
-                      <Link href={`${base}/characters/${c.slug}`} className="font-bold uppercase tracking-[0.04em] hover:text-[#7a1010]">
+                      <Link href={`${base}/characters/${c.slug}`} className="tap font-bold uppercase tracking-[0.04em] hover:text-[#7a1010]">
                         {c.name}
                       </Link>
                       {c.title && <span className="block text-sm italic">{c.title}</span>}

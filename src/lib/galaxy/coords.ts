@@ -17,11 +17,17 @@ export type PlanePoint = { x: number; z: number };
 
 export const toScene = (x: number, y: number, z: number): Vec3 => [x / LY_PER_UNIT, y / LY_PER_UNIT, z / LY_PER_UNIT];
 
-/** Holy Terra, in light-years. */
-export const TERRA: PlanePoint = { x: 0, z: 26_000 };
+/**
+ * Holy Terra, in light-years. The galactic core lies within Ultima Segmentum,
+ * to the galactic east of Sol, so Terra sits west (and a little south) of it.
+ */
+export const TERRA: PlanePoint = { x: -18_000, z: 5_000 };
 
-/** Segmentum Solar is the region within this distance of Terra. */
-export const SOLAR_RADIUS_LY = 16_000;
+/**
+ * Segmentum Solar is the region within this distance of Terra. Kept small enough
+ * that the core (and the Maelstrom, between Solar's border and the core) lie in Ultima.
+ */
+export const SOLAR_RADIUS_LY = 12_000;
 
 export type Segmentum = "Solar" | "Obscurus" | "Ultima" | "Tempestus" | "Pacificus";
 
@@ -64,11 +70,11 @@ export const SEGMENTUM_LABELS: Record<Segmentum, string> = {
 
 /** Where to print each Segmentum's name on the map (light-years). */
 export const SEGMENTUM_LABEL_POSITIONS: Record<Segmentum, PlanePoint> = {
-  Solar: { x: 0, z: 37_000 },
-  Obscurus: { x: -6_000, z: -24_000 },
-  Ultima: { x: 24_000, z: -12_000 },
-  Tempestus: { x: 12_000, z: 47_000 },
-  Pacificus: { x: -30_000, z: 22_000 },
+  Solar: { x: -18_000, z: 13_000 },
+  Obscurus: { x: -8_000, z: -26_000 },
+  Ultima: { x: 14_000, z: 14_000 },
+  Tempestus: { x: -26_000, z: 34_000 },
+  Pacificus: { x: -38_000, z: 20_000 },
 };
 
 /** Point where a wedge boundary leaves the Solar ring, and where it meets the galaxy's edge. */
@@ -84,26 +90,63 @@ export function wedgeBoundaryLine(bearingDeg: number): [PlanePoint, PlanePoint] 
 
 export type Landmark = { id: string; name: string; x: number; z: number; kind: "terra" | "warp" | "world" | "region"; note: string };
 
+/**
+ * Lore anchors (approximate):
+ * - Eye of Terror: galactic edge, north and west of Terra, Segmentum Obscurus.
+ * - Cadia: guards the Cadian Gate beside the Eye.
+ * - Maelstrom: Ultima Segmentum, between Segmentum Solar's border and the core.
+ * - Baal: Red Scar, Ultima Segmentum, beyond the Great Rift (Imperium Nihilus).
+ * - Ultramar: Eastern Fringe, south-east, on Terra's side of the Rift (Imperium Sanctus).
+ * - Ghoul Stars: extreme galactic north-east.
+ * - Hadex Anomaly: Eastern Fringe, the Great Rift's eastern end.
+ */
 export const LANDMARKS: Landmark[] = [
   { id: "terra", name: "Holy Terra", ...TERRA, kind: "terra", note: "Throneworld of the Imperium" },
-  { id: "core", name: "Galactic Core", x: 0, z: 0, kind: "region", note: "The dense heart of the galaxy" },
-  { id: "eye", name: "Eye of Terror", x: -24_000, z: -10_000, kind: "warp", note: "Warp storm where the Aeldari empire fell" },
-  { id: "maelstrom", name: "The Maelstrom", x: 9_000, z: 12_000, kind: "warp", note: "Warp rift near the Segmentum Solar" },
-  { id: "ultramar", name: "Ultramar", x: 36_000, z: 6_000, kind: "world", note: "Realm of five hundred worlds" },
-  { id: "baal", name: "Baal", x: 30_000, z: 28_000, kind: "world", note: "Red Scar, eastern Ultima" },
-  { id: "ghoul", name: "Ghoul Stars", x: 46_000, z: -6_000, kind: "region", note: "Uncharted stars at the galaxy's eastern rim" },
+  { id: "core", name: "Galactic Core", x: 0, z: 0, kind: "region", note: "The galaxy's heart, within Ultima Segmentum" },
+  { id: "eye", name: "Eye of Terror", x: -30_000, z: -34_000, kind: "warp", note: "Warp storm where the Aeldari empire fell" },
+  { id: "cadia", name: "Cadia", x: -31_000, z: -24_000, kind: "world", note: "Fortress world at the Cadian Gate" },
+  { id: "maelstrom", name: "The Maelstrom", x: -3_500, z: 1_500, kind: "warp", note: "Warp rift between Segmentum Solar and the core" },
+  { id: "baal", name: "Baal", x: 22_000, z: -16_000, kind: "world", note: "Red Scar, Ultima Segmentum" },
+  { id: "ultramar", name: "Ultramar", x: 34_000, z: 22_000, kind: "world", note: "Realm of five hundred worlds, Eastern Fringe" },
+  { id: "ghoul", name: "Ghoul Stars", x: 30_000, z: -36_000, kind: "region", note: "Uncharted stars at the galaxy's north-eastern rim" },
+  { id: "hadex", name: "Hadex Anomaly", x: 46_000, z: 6_000, kind: "warp", note: "Eastern end of the Great Rift" },
 ];
 
-/** The Great Rift (Cicatrix Maledictum), as a path across the galaxy in light-years. */
+/**
+ * The Great Rift (Cicatrix Maledictum): from the Eye of Terror in the galactic
+ * north-west, north of Terra, across to the Hadex Anomaly in the east. Ordered
+ * west to east (x strictly increasing) so sideOfRift can interpolate.
+ */
 export const GREAT_RIFT_PATH: PlanePoint[] = [
-  { x: -24_000, z: -10_000 },
-  { x: -14_000, z: -1_000 },
-  { x: -3_000, z: 7_000 },
-  { x: 10_000, z: 11_000 },
-  { x: 24_000, z: 9_000 },
-  { x: 38_000, z: 2_000 },
-  { x: 47_000, z: -2_000 },
+  { x: -30_000, z: -34_000 },
+  { x: -24_000, z: -22_000 },
+  { x: -14_000, z: -12_000 },
+  { x: -2_000, z: -9_000 },
+  { x: 14_000, z: -6_000 },
+  { x: 30_000, z: 0 },
+  { x: 46_000, z: 6_000 },
 ];
+
+export type RiftSide = "Imperium Sanctus" | "Imperium Nihilus";
+
+/**
+ * Which half of the Imperium a point falls in once the Rift opens: Imperium
+ * Sanctus (Terra's side, to the south) or Imperium Nihilus (north). Beyond the
+ * Rift's ends, its nearest end decides.
+ */
+export function sideOfRift(x: number, z: number): RiftSide {
+  const path = GREAT_RIFT_PATH;
+  let riftZ: number;
+  if (x <= path[0].x) riftZ = path[0].z;
+  else if (x >= path[path.length - 1].x) riftZ = path[path.length - 1].z;
+  else {
+    const i = path.findIndex((p) => p.x >= x);
+    const a = path[i - 1];
+    const b = path[i];
+    riftZ = a.z + ((x - a.x) / (b.x - a.x)) * (b.z - a.z);
+  }
+  return z > riftZ ? "Imperium Sanctus" : "Imperium Nihilus";
+}
 
 /** Reach of the Astronomican, centred on Terra. */
 export const ASTRONOMICAN_RADIUS_LY = 50_000;

@@ -34,7 +34,7 @@ export default async function CharacterPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <Link href={`${base}/characters`} className="rubric hover:text-gold-bright">← Dramatis Personae</Link>
+      <Link href={`${base}/characters`} className="tap rubric hover:text-gold-bright">← Dramatis Personae</Link>
       <RulebookPage>
         {c.title && <p className="mb-2 text-center text-lg italic">{c.title}</p>}
         <Banner large as="h1">{c.name}</Banner>
@@ -108,7 +108,7 @@ export default async function CharacterPage({ params }: Props) {
             <ul className="space-y-1">
               {c.narratives.map((n) => (
                 <li key={n.slug}>
-                  <Link href={`${base}/narratives/${n.slug}`} className="font-bold underline hover:text-[#7a1010]">{n.title}</Link>
+                  <Link href={`${base}/narratives/${n.slug}`} className="tap font-bold underline hover:text-[#7a1010]">{n.title}</Link>
                   {n.subtitle && <span className="italic">: {n.subtitle}</span>}
                 </li>
               ))}

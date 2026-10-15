@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { GALAXY_RADIUS_LY, SEGMENTUM_LABELS, segmentumAt, TERRA } from "@/lib/galaxy/coords";
+import { GALAXY_RADIUS_LY, SEGMENTUM_LABELS, segmentumAt, sideOfRift, TERRA } from "@/lib/galaxy/coords";
 import { Field } from "./ActionForm";
 
 const AXES = [
@@ -24,7 +24,7 @@ export function CoordinateFields({ initial, systemId }: { initial: { x: number; 
     <fieldset>
       <legend className="mb-1 text-sm font-medium">Galactic position</legend>
       <p className="mb-3 text-xs text-ash">
-        Light-years from the galactic core. Holy Terra sits at 0, 0, 26,000; the galaxy is about 50,000 ly in radius. Map north is −Z.
+        Light-years from the galactic core. Holy Terra sits at {TERRA.x.toLocaleString()}, 0, {TERRA.z.toLocaleString()} (west of the core); the galaxy is about 50,000 ly in radius. Map north is −Z.
       </p>
       <div className="grid grid-cols-3 gap-4">
         {AXES.map(({ key, label }) => (
@@ -42,11 +42,11 @@ export function CoordinateFields({ initial, systemId }: { initial: { x: number; 
         ))}
       </div>
       <p className="cogitator mt-3 px-3 py-2 text-xs uppercase tracking-widest" aria-live="polite">
-        {SEGMENTUM_LABELS[segmentumAt(x, z)]} · {fromCore.toLocaleString()} ly from the core · {fromTerra.toLocaleString()} ly from Terra
+        {SEGMENTUM_LABELS[segmentumAt(x, z)]} · {sideOfRift(x, z)} · {fromCore.toLocaleString()} ly from the core · {fromTerra.toLocaleString()} ly from Terra
         {beyondRim && " · beyond the galactic rim"}
       </p>
       {systemId && (
-        <Link href={`/galaxy?system=${systemId}`} target="_blank" className="mt-2 inline-block text-xs text-cerulean-bright hover:underline">
+        <Link href={`/galaxy?system=${systemId}`} target="_blank" className="tap mt-2 inline-block text-xs text-cerulean-bright hover:underline">
           Locate on the galaxy map ↗
         </Link>
       )}

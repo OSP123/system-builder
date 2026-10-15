@@ -27,7 +27,7 @@ export function ReadOnlyRecord({
 }) {
   return (
     <div className="max-w-2xl">
-      <Link href={backHref} className="text-sm text-ash hover:text-parchment">← {backLabel}</Link>
+      <Link href={backHref} className="tap text-sm text-ash hover:text-parchment">← {backLabel}</Link>
       <div className="mt-6 border-2 border-blood bg-[#1a0806] p-6">
         <p className="font-mono text-xs uppercase tracking-[0.3em] text-blood-bright">+++ Sealed record +++</p>
         <h2 className="gothic-title mt-3 text-4xl">{title}</h2>

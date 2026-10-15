@@ -26,7 +26,7 @@ export default async function EditSystemPage({ params }: { params: Promise<{ wor
       {editable ? (
         <div>
           <div className="mb-6 flex items-center gap-4">
-            <Link href={`/admin/worlds/${world.id}/systems`} className="text-sm text-ash hover:text-parchment">← Systems</Link>
+            <Link href={`/admin/worlds/${world.id}/systems`} className="tap text-sm text-ash hover:text-parchment">← Systems</Link>
             <h2 className="font-display text-2xl">{system.name}</h2>
           </div>
           <SystemForm action={updateSystem.bind(null, system.id)} system={system} />

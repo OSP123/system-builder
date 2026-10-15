@@ -15,7 +15,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       )}
       <LoginForm next={next ?? ""} />
       <p className="mt-6 text-center text-sm">
-        <Link href="/admin/forgot-password" className="text-ash underline-offset-4 hover:text-parchment hover:underline">
+        <Link href="/admin/forgot-password" className="tap text-ash underline-offset-4 hover:text-parchment hover:underline">
           Forgot password?
         </Link>
       </p>

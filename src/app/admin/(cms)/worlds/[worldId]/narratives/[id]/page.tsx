@@ -32,10 +32,10 @@ export default async function EditNarrativePage({ params }: { params: Promise<{ 
   return (
     <div className="max-w-4xl">
       <div className="mb-6 flex items-center gap-4">
-        <Link href={`/admin/worlds/${world.id}/narratives`} className="text-sm text-ash hover:text-parchment">← Narratives</Link>
+        <Link href={`/admin/worlds/${world.id}/narratives`} className="tap text-sm text-ash hover:text-parchment">← Narratives</Link>
         <h2 className="font-display text-2xl">{narrative.title}</h2>
         {narrative.published && world.published && (
-          <Link href={`/w/${world.slug}/narratives/${narrative.slug}`} target="_blank" className="ml-auto text-sm text-cerulean-bright hover:underline">View ↗</Link>
+          <Link href={`/w/${world.slug}/narratives/${narrative.slug}`} target="_blank" className="tap ml-auto text-sm text-cerulean-bright hover:underline">View ↗</Link>
         )}
       </div>
       <NarrativeForm

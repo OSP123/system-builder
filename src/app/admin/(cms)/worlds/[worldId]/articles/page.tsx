@@ -25,16 +25,16 @@ export default async function ArticlesPage({ params }: { params: Promise<{ world
       ) : (
         <table className="w-full text-sm">
           <thead className="text-left text-xs uppercase tracking-widest text-ash">
-            <tr><th className="py-2">Title</th><th>Category</th><th>Author</th><th>Status</th><th>Updated</th></tr>
+            <tr><th className="py-2">Title</th><th className="hidden sm:table-cell">Category</th><th>Author</th><th>Status</th><th className="hidden sm:table-cell">Updated</th></tr>
           </thead>
           <tbody>
             {articles.map((a) => (
               <tr key={a.id} className="border-t border-line">
-                <td className="py-3"><Link href={`${base}/${a.id}`} className="text-parchment hover:text-gold-bright">{a.title}</Link></td>
-                <td className="text-ash">{CATEGORY_LABELS[a.category]}</td>
+                <td className="py-3"><Link href={`${base}/${a.id}`} className="tap text-parchment hover:text-gold-bright">{a.title}</Link></td>
+                <td className="hidden sm:table-cell text-ash">{CATEGORY_LABELS[a.category]}</td>
                 <td className="text-xs"><AuthorTag author={a.author} currentUserId={user.id} /></td>
                 <td><StatusBadge published={a.published} /></td>
-                <td className="text-ash">{a.updatedAt.toLocaleDateString()}</td>
+                <td className="hidden sm:table-cell text-ash">{a.updatedAt.toLocaleDateString()}</td>
               </tr>
             ))}
           </tbody>

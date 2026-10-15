@@ -32,19 +32,19 @@ export function MediaGrid() {
                   <>
                     <form action={updateMediaAlt.bind(null, m.id)} className="flex gap-2">
                       <input name="alt" defaultValue={m.alt ?? ""} placeholder="Caption / alt text" className="field py-1 text-xs" />
-                      <button type="submit" className="text-xs text-cerulean-bright">Save</button>
+                      <button type="submit" className="tap px-1 text-xs text-cerulean-bright">Save</button>
                     </form>
                     <div className="flex justify-between text-xs">
                       <button
                         type="button"
-                        className="text-ash hover:text-parchment"
+                        className="tap text-ash hover:text-parchment"
                         onClick={() => navigator.clipboard.writeText(`![${m.alt ?? ""}](${mediaUrl(m.key)})`)}
                       >
                         Copy Markdown
                       </button>
                       <button
                         type="button"
-                        className="text-red-400 hover:text-red-300"
+                        className="tap text-red-400 hover:text-red-300"
                         onClick={async () => {
                           if (!confirm("Delete this image? Any page using it as a cover will lose it.")) return;
                           await deleteMedia(m.id);
@@ -60,7 +60,7 @@ export function MediaGrid() {
                     {m.alt && <p className="text-xs italic text-parchment">{m.alt}</p>}
                     <button
                       type="button"
-                      className="text-xs text-ash hover:text-parchment"
+                      className="tap text-xs text-ash hover:text-parchment"
                       onClick={() => navigator.clipboard.writeText(`![${m.alt ?? ""}](${mediaUrl(m.key)})`)}
                     >
                       Copy Markdown

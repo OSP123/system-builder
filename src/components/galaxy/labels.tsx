@@ -44,10 +44,13 @@ export function LabelProjector({ bus }: { bus: LabelBus }) {
       }
       if (anchor instanceof THREE.Vector3) tmp.copy(anchor);
       else anchor.getWorldPosition(tmp);
+      // Level of detail: reference labels only appear once the camera is close enough.
+      const maxDistance = Number(el.dataset.maxDistance) || Infinity;
+      const tooFar = camera.position.distanceTo(tmp) > maxDistance;
       tmp.project(camera);
       const behind = tmp.z > 1 || tmp.z < -1;
-      el.style.visibility = behind ? "hidden" : "visible";
-      if (behind) continue;
+      el.style.visibility = behind || tooFar ? "hidden" : "visible";
+      if (behind || tooFar) continue;
       const x = (tmp.x * 0.5 + 0.5) * size.width;
       const y = (-tmp.y * 0.5 + 0.5) * size.height;
       el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -100%)`;
@@ -61,11 +64,14 @@ export function MapLabel({
   bus,
   id,
   hidden,
+  maxDistance,
   children,
 }: {
   bus: LabelBus;
   id: string;
   hidden?: boolean;
+  /** Hide the label while the camera is further than this from it (scene units). */
+  maxDistance?: number;
   children: React.ReactNode;
 }) {
   return (
@@ -77,6 +83,7 @@ export function MapLabel({
       // Starts invisible via CSS; the projector's inline visibility takes over once placed.
       className="pointer-events-none invisible absolute left-0 top-0 whitespace-nowrap"
       style={{ display: hidden ? "none" : undefined }}
+      data-max-distance={maxDistance}
     >
       {children}
     </div>

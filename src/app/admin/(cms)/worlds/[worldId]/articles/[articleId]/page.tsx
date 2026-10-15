@@ -29,10 +29,10 @@ export default async function EditArticlePage({ params }: { params: Promise<{ wo
   return (
     <div className="max-w-4xl">
       <div className="mb-6 flex items-center gap-4">
-        <Link href={`/admin/worlds/${world.id}/articles`} className="text-sm text-ash hover:text-parchment">← Lore</Link>
+        <Link href={`/admin/worlds/${world.id}/articles`} className="tap text-sm text-ash hover:text-parchment">← Lore</Link>
         <h2 className="font-display text-2xl">{article.title}</h2>
         {article.published && world.published && (
-          <Link href={`/w/${world.slug}/lore/${article.slug}`} target="_blank" className="ml-auto text-sm text-cerulean-bright hover:underline">View ↗</Link>
+          <Link href={`/w/${world.slug}/lore/${article.slug}`} target="_blank" className="tap ml-auto text-sm text-cerulean-bright hover:underline">View ↗</Link>
         )}
       </div>
       <ArticleForm action={updateArticle.bind(null, article.id)} article={article} systems={await systemsForSelect(world.id)} />

@@ -23,18 +23,18 @@ export default async function NarrativesAdminPage({ params }: { params: Promise<
       ) : (
         <table className="w-full text-sm">
           <thead className="text-left text-xs uppercase tracking-widest text-ash">
-            <tr><th className="py-2">Title</th><th>Author</th><th>Visibility</th><th>Updated</th></tr>
+            <tr><th className="py-2">Title</th><th>Author</th><th>Visibility</th><th className="hidden sm:table-cell">Updated</th></tr>
           </thead>
           <tbody>
             {narratives.map((n) => (
               <tr key={n.id} className="border-t border-line">
                 <td className="py-3">
-                  <Link href={`${base}/${n.id}`} className="text-parchment hover:text-gold-bright">{n.title}</Link>
+                  <Link href={`${base}/${n.id}`} className="tap text-parchment hover:text-gold-bright">{n.title}</Link>
                   {n.subtitle && <span className="block text-xs text-ash">{n.subtitle}</span>}
                 </td>
                 <td className="text-xs"><AuthorTag author={n.author} currentUserId={user.id} /></td>
                 <td><StatusBadge published={n.published} /></td>
-                <td className="text-ash">{n.updatedAt.toLocaleDateString()}</td>
+                <td className="hidden sm:table-cell text-ash">{n.updatedAt.toLocaleDateString()}</td>
               </tr>
             ))}
           </tbody>

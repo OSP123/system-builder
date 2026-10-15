@@ -45,7 +45,7 @@ export function EditUserForm({ action, user, isSelf }: { action: Action; user: U
         <input id="name" name="name" className="field" defaultValue={user.name ?? ""} />
       </Field>
       <RoleSelect value={user.role} />
-      <label className="flex items-center gap-2 text-sm">
+      <label className="flex min-h-11 items-center gap-2 text-sm">
         <input type="checkbox" name="disabled" defaultChecked={user.disabled} disabled={isSelf} className="h-4 w-4 accent-blood-bright" />
         Disabled (cannot sign in; their records stay)
       </label>

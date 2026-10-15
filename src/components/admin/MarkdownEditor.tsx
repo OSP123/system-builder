@@ -33,7 +33,7 @@ export function MarkdownEditor({ name, defaultValue, rows = 18 }: { name: string
           <button type="button" className={tabClass("write")} onClick={() => setTab("write")}>Write</button>
           <button type="button" className={tabClass("preview")} onClick={() => setTab("preview")}>Preview</button>
         </div>
-        <button type="button" className="mb-1 text-xs text-cerulean-bright hover:underline" onClick={() => setShowImages((s) => !s)}>
+        <button type="button" className="tap mb-1 text-xs text-cerulean-bright hover:underline" onClick={() => setShowImages((s) => !s)}>
           {showImages ? "Close images" : "Insert image"}
         </button>
       </div>

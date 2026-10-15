@@ -548,3 +548,18 @@ a:hover .grim-image,
 @media (prefers-reduced-motion: reduce) {
   .notice-in, .notice-in.cogitator { animation: none; }
 }
+
+/* Comfortable touch target for standalone small links and buttons (≥ 32px tall). */
+.tap {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+}
+
+/* Horizontally scrolling rows (header nav, CMS tabs) fade out at the edge on phones. */
+@media (max-width: 639px) {
+  .scroll-fade {
+    mask-image: linear-gradient(90deg, #000 85%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+  }
+}

@@ -187,7 +187,7 @@ export function PlanetForm({ action, planet }: { action: Action; planet?: Planet
       <Field name="description" label="Description (Markdown)">
         <MarkdownEditor name="description" defaultValue={planet?.description} rows={12} />
       </Field>
-      <Field name="genParams" label="Generator parameters (JSON, optional)" hint="Reserved for the upcoming 3D planet generator, e.g. {&quot;seed&quot;: 42, &quot;water&quot;: 0.3}">
+      <Field name="genParams" label="Generator parameters (JSON, optional)" hint="Shapes the planet on the galaxy map, e.g. {&quot;water&quot;: 0.9, &quot;clouds&quot;: 0.3}. Leave empty to use the look for its classification.">
         <textarea
           id="genParams"
           name="genParams"

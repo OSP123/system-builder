@@ -18,12 +18,12 @@ type Props = {
 export function ArmyEntry({ name, href, points, squad, profiles, wargear, options, specialRules }: Props) {
   return (
     <article className="break-inside-avoid">
-      <div className="rulebook-leader font-bold uppercase tracking-[0.06em]">
-        <h3 className="text-lg">{href ? <Link href={href} className="hover:text-[#7a1010]">{name}</Link> : name}</h3>
+      <div className="rulebook-leader flex-wrap font-bold uppercase tracking-[0.06em]">
+        <h3 className="min-w-0 text-lg">{href ? <Link href={href} className="tap hover:text-[#7a1010]">{name}</Link> : name}</h3>
         {points && (
           <>
             <span className="dots" aria-hidden />
-            <span className="whitespace-nowrap">{points}</span>
+            <span className="ml-auto whitespace-nowrap">{points}</span>
           </>
         )}
       </div>
