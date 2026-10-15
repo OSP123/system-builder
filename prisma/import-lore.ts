@@ -55,6 +55,30 @@ async function main() {
     },
   });
 
+  // Place Cerulean on the galaxy map (southern fringe, Segmentum Tempestus) only
+  // while its coordinates are still the unset default.
+  if (system.x === 0 && system.y === 0 && system.z === 0) {
+    await db.starSystem.update({ where: { id: system.id }, data: { x: -6_000, y: 300, z: 44_000 } });
+    console.log("Placed the Cerulean system on the galaxy map (Segmentum Tempestus).");
+  }
+  // "Large, pristine blue oceans" with floating island continents, unless a look was already chosen.
+  if (planet.genParams === null) {
+    await db.planet.update({
+      where: { id: planet.id },
+      data: {
+        genParams: {
+          water: 0.9,
+          clouds: 0.35,
+          ice: 0.12,
+          detail: 2.4,
+          atmosphere: "#6fb6e8",
+          palette: { deep: "#0a3a6b", shallow: "#3aa0d4", low: "#3a5a2a", mid: "#4a6234", high: "#66704a" },
+        },
+      },
+    });
+    console.log("Gave the planet Cerulean its ocean-world look.");
+  }
+
   let created = 0;
   let updated = 0;
   let skipped = 0;

@@ -12,6 +12,7 @@ export function SiteHeader({ children }: { children?: React.ReactNode }) {
         </Link>
         <nav className="flex basis-full flex-wrap items-center gap-x-5 gap-y-1 font-display text-sm uppercase tracking-[0.2em] text-ash sm:flex-1 sm:basis-auto [&_a:hover]:text-blood-bright">
           {children}
+          <Link href="/galaxy" className="sm:ml-auto">Galaxy Map</Link>
         </nav>
       </div>
       <div className="ink-rule" />

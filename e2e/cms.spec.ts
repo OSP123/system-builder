@@ -80,7 +80,7 @@ test("admin builds a world end to end and it appears publicly", async ({ page })
   await expect(page.getByRole("heading", { name: "New star system" })).toBeVisible();
   await page.getByLabel("Name").fill("Azure Veil");
   await page.getByLabel("Star type").fill("Blue giant");
-  await page.getByLabel("X", { exact: true }).fill("120.5");
+  await page.getByLabel("X (east +)").fill("120.5");
   // Theme: pick a preset and watch the live preview pick up its colours
   await page.getByLabel("Preset").selectOption("forge");
   await expect(page.getByLabel("Theme preview")).toHaveAttribute("style", /--color-blood-bright:\s*#c2410c/);

@@ -5,6 +5,7 @@ import { ActionForm, Field, PublishedToggle, SubmitButton } from "./ActionForm";
 import { ImagePicker } from "./ImagePicker";
 import { MarkdownEditor } from "./MarkdownEditor";
 import { ThemeEditor } from "./ThemeEditor";
+import { CoordinateFields } from "./CoordinateFields";
 import { normalizeTheme } from "@/lib/theme";
 import { CHARACTER_STATUSES, FORCE_SLOTS, readProfile, readProfiles, readRules, SLOT_LABELS, STATUS_LABELS } from "@/lib/codex";
 import { CharacterPicker } from "./CharacterPicker";
@@ -126,21 +127,11 @@ export function SystemForm({ action, system }: { action: Action; system?: StarSy
         <Field name="starType" label="Star type">
           <input id="starType" name="starType" className="field" defaultValue={system?.starType ?? ""} placeholder="Blue giant" />
         </Field>
-        <Field name="segmentum" label="Segmentum / region">
-          <input id="segmentum" name="segmentum" className="field" defaultValue={system?.segmentum ?? ""} placeholder="Segmentum Pacificus" />
+        <Field name="segmentum" label="Sector / region" hint="Free text; the Segmentum is worked out from the position below.">
+          <input id="segmentum" name="segmentum" className="field" defaultValue={system?.segmentum ?? ""} placeholder="e.g. Orpheus Sector" />
         </Field>
       </div>
-      <fieldset>
-        <legend className="mb-1 text-sm font-medium">Star map position</legend>
-        <p className="mb-2 text-xs text-ash">Coordinates for the upcoming interactive star map.</p>
-        <div className="grid grid-cols-3 gap-4">
-          {(["x", "y", "z"] as const).map((axis) => (
-            <Field key={axis} name={axis} label={axis.toUpperCase()}>
-              <input id={axis} name={axis} type="number" step="any" className="field" defaultValue={system?.[axis] ?? 0} />
-            </Field>
-          ))}
-        </div>
-      </fieldset>
+      <CoordinateFields initial={{ x: system?.x ?? 0, y: system?.y ?? 0, z: system?.z ?? 0 }} systemId={system?.published ? system.id : undefined} />
       <Field name="description" label="Description (Markdown)">
         <MarkdownEditor name="description" defaultValue={system?.description} rows={12} />
       </Field>

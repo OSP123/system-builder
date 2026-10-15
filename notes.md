@@ -144,3 +144,15 @@ Follow-ups:
 - Resend domain verification (reset emails currently only reach the Resend account address)
 - Free tier: uploads ephemeral; free Postgres expires 30 days after creation
 
+Date: 2026-10-15
+Tasks:
+- 3D galaxy map at /galaxy (three.js via react-three-fiber/drei): procedural barred-spiral Milky Way, Segmenta, Terra, Astronomican, landmarks, Great Rift toggle (off by default), world filter and colours; system view (star by type, orbiting procedural planets lit by their star); planet view (noise-shaded globe with clouds, atmosphere, ice, city lights, lava, sun glint)
+- URL-tracked levels via native history (no server round trip; galaxy -> system in ~0.1s), Escape to go up, shareable links, systems index for keyboard/screen readers/no-WebGL, reduced motion, phone layout
+- Labels rendered as DOM elements projected from 3D anchors (replaced drei <Html>, which threw removeChild errors on toggles and scene swaps)
+- Coordinates are light-years from the core; CMS shows live Segmentum readout; planet looks from classification + genParams overrides
+- Importer places Cerulean on the Tempestus fringe and gives the planet an ocean look, only if still unset
+- Verified: 135 Vitest (20 galaxy) + 9 Playwright (2 galaxy, incl. no-WebGL fallback); screenshots desktop/phone; 0 console errors over repeated navigation
+Follow-ups:
+- Merge feature/galaxy-map and push to deploy
+- Possible next steps: place systems by clicking on the map in the CMS; richer planet generator controls
+

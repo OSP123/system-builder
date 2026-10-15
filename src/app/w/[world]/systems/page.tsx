@@ -19,9 +19,8 @@ export default async function SystemsPage({ params }: Props) {
     <div>
       <p className="rubric">Astrographica</p>
       <h1 className="gothic-title mt-2 text-5xl sm:text-6xl">Star Systems</h1>
-      <p className="mt-3 font-serif text-xl italic text-ash">
-        Charted systems of {world.name}. The holo-chart is being consecrated and will follow.
-      </p>
+      <p className="mt-3 font-serif text-xl italic text-ash">Charted systems of {world.name}.</p>
+      <Link href={`/galaxy?world=${world.slug}`} className="btn btn-primary mt-5">View on the galaxy map</Link>
 
       {systems.length === 0 ? (
         <p className="mt-10 font-mono text-ash">+++ No systems have been charted +++</p>

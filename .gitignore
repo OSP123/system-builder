@@ -48,3 +48,4 @@ next-env.d.ts
 /playwright-report
 /.next-e2e/
 /.test-outbox
+/.next-preview/

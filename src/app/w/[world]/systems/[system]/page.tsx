@@ -35,6 +35,7 @@ export default async function SystemPage({ params }: Props) {
       <p className="mt-3 font-mono text-xs uppercase tracking-[0.3em] text-phosphor/80">
         +++ {[system.starType, system.segmentum].filter(Boolean).join(" // ") || "Uncatalogued"} +++
       </p>
+      <Link href={`/galaxy?system=${system.id}`} className="btn btn-ghost mt-5">Locate on the galaxy map</Link>
 
       {system.description && (
         <div className="mt-8">
