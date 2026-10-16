@@ -1,4 +1,4 @@
-import type { Article, Character, Narrative, Planet, StarSystem, Unit, World } from "@prisma/client";
+import type { Article, Character, Narrative, Planet, Region, StarSystem, Unit, World } from "@prisma/client";
 import type { ActionState } from "@/app/admin/actions";
 import { CATEGORIES, CATEGORY_LABELS } from "@/lib/categories";
 import { ActionForm, Field, PublishedToggle, SubmitButton } from "./ActionForm";
@@ -9,6 +9,8 @@ import { CoordinateFields } from "./CoordinateFields";
 import { normalizeTheme } from "@/lib/theme";
 import { CHARACTER_STATUSES, FORCE_SLOTS, readProfile, readProfiles, readRules, SLOT_LABELS, STATUS_LABELS } from "@/lib/codex";
 import { CharacterPicker } from "./CharacterPicker";
+import { SectorsEditor } from "./SectorsEditor";
+import { readSectors } from "@/lib/regions";
 import { ProfilesEditor } from "./ProfilesEditor";
 import { RulesEditor } from "./RulesEditor";
 
@@ -385,6 +387,44 @@ export function NarrativeForm({
       <PlanetSelect name="planetId" label="Setting (optional)" groups={planets} value={narrative?.planetId} />
       <PublishedToggle defaultChecked={narrative?.published} />
       <SubmitButton>{narrative ? "Save narrative" : "Create narrative"}</SubmitButton>
+    </ActionForm>
+  );
+}
+
+export function RegionForm({ action, region }: { action: Action; region?: Region }) {
+  return (
+    <ActionForm action={action}>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Field name="name" label="Name">
+          <input id="name" name="name" className="field" defaultValue={region?.name} required />
+        </Field>
+        <Field name="kind" label="Kind" hint="e.g. Theatre of war, Hive city, Wasteland.">
+          <input id="kind" name="kind" className="field" defaultValue={region?.kind ?? ""} />
+        </Field>
+        <Field name="lat" label="Latitude" hint="-90 (south pole) to 90 (north pole)">
+          <input id="lat" name="lat" type="number" step="any" min={-90} max={90} className="field" defaultValue={region?.lat ?? 0} />
+        </Field>
+        <Field name="lng" label="Longitude" hint="-180 to 180">
+          <input id="lng" name="lng" type="number" step="any" min={-180} max={180} className="field" defaultValue={region?.lng ?? 0} />
+        </Field>
+        <Field name="slug" label="Slug" hint={SLUG_HINT}>
+          <input id="slug" name="slug" className="field" defaultValue={region?.slug} />
+        </Field>
+        <Field name="sortOrder" label="Order" hint={ORDER_HINT}>
+          <input id="sortOrder" name="sortOrder" type="number" className="field" defaultValue={region?.sortOrder ?? 0} />
+        </Field>
+      </div>
+      <Field name="terrain" label="Terrain" hint="One line, e.g. Sprawling canyon island.">
+        <input id="terrain" name="terrain" className="field" defaultValue={region?.terrain ?? ""} />
+      </Field>
+      <Field name="summary" label="Description (Markdown)">
+        <MarkdownEditor name="summary" defaultValue={region?.summary} rows={8} />
+      </Field>
+      <Field name="sectors" label="Sectors">
+        <SectorsEditor name="sectors" initial={readSectors(region?.sectors)} title={region?.name ?? ""} />
+      </Field>
+      <PublishedToggle defaultChecked={region?.published} />
+      <SubmitButton>{region ? "Save region" : "Create region"}</SubmitButton>
     </ActionForm>
   );
 }

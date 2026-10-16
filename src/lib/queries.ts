@@ -63,6 +63,11 @@ export function getPublishedPlanet(worldId: string, systemSlug: string, planetSl
       coverImage: true,
       system: { select: { name: true, slug: true, theme: true, backdropImage: { select: { key: true } } } },
       articles: { where: { published: true }, select: { slug: true, title: true, category: true } },
+      regions: {
+        where: { published: true },
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+        select: { slug: true, name: true, kind: true, summary: true, lat: true, lng: true },
+      },
     },
   });
 }
@@ -117,6 +122,26 @@ export function getPublishedNarrative(worldId: string, slug: string) {
         where: { published: true },
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
         select: { slug: true, name: true, title: true, portraitImage: true },
+      },
+    },
+  });
+}
+
+export function getPublishedRegion(worldId: string, systemSlug: string, planetSlug: string, regionSlug: string) {
+  return db.region.findFirst({
+    where: {
+      slug: regionSlug,
+      published: true,
+      planet: { slug: planetSlug, published: true, system: { slug: systemSlug, worldId, published: true } },
+    },
+    include: {
+      planet: {
+        select: {
+          name: true,
+          slug: true,
+          system: { select: { name: true, slug: true, theme: true, backdropImage: { select: { key: true } } } },
+          regions: { where: { published: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { slug: true, name: true } },
+        },
       },
     },
   });

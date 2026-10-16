@@ -82,6 +82,7 @@ export async function deleteUser(actor: Actor, userId: string) {
     db.character.updateMany(from),
     db.unit.updateMany(from),
     db.narrative.updateMany(from),
+    db.region.updateMany(from),
     db.user.delete({ where: { id: userId } }),
   ]);
 }
@@ -109,7 +110,7 @@ export async function listUsersWithCounts() {
       role: true,
       disabled: true,
       createdAt: true,
-      _count: { select: { worlds: true, articles: true, characters: true, units: true, narratives: true, systems: true, planets: true } },
+      _count: { select: { worlds: true, articles: true, characters: true, units: true, narratives: true, systems: true, planets: true, regions: true } },
     },
   });
 }

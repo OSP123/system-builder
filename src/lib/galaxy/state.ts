@@ -7,7 +7,9 @@ export type MapPlanet = {
   orbitIndex: number;
   population: string | null;
   genParams: unknown;
+  regions: MapRegion[];
 };
+export type MapRegion = { id: string; slug: string; name: string; kind: string | null; summary: string | null; lat: number; lng: number };
 export type MapSystem = {
   id: string;
   slug: string;

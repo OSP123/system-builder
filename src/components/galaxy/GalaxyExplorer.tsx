@@ -16,7 +16,8 @@ import {
   type Segmentum,
 } from "@/lib/galaxy/coords";
 import { planetLook, sortByOrbit } from "@/lib/galaxy/planets";
-import { parseView, viewQuery, type GalaxyData, type MapPlanet, type MapSystem, type MapView } from "@/lib/galaxy/state";
+import { parseView, viewQuery, type GalaxyData, type MapPlanet, type MapRegion, type MapSystem, type MapView } from "@/lib/galaxy/state";
+import { formatLatLng } from "@/lib/regions";
 import { starLook } from "@/lib/galaxy/stars";
 import type { Shot } from "./CameraRig";
 import { GalaxyScene, systemApproach } from "./GalaxyScene";
@@ -62,6 +63,9 @@ export default function GalaxyExplorer({ data }: { data: GalaxyData }) {
   const reducedMotion = useReducedMotion();
   const bus = useLabelBus();
   const [hovered, setHovered] = useState<string | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const planetIdForRegions = params.get("planet");
+  useEffect(() => setSelectedRegion(null), [planetIdForRegions]);
 
   useEffect(() => {
     setWebgl(hasWebGL());
@@ -177,7 +181,19 @@ export default function GalaxyExplorer({ data }: { data: GalaxyData }) {
                 {view.level === "system" && system && (
                   <SystemScene system={system} bus={bus} reducedMotion={reducedMotion} onSelectPlanet={selectPlanet} onHoverPlanet={setHovered} />
                 )}
-                {view.level === "planet" && planet && <PlanetScene planet={planet} reducedMotion={reducedMotion} />}
+                {view.level === "planet" && planet && (
+                  <PlanetScene
+                    planet={planet}
+                    bus={bus}
+                    reducedMotion={reducedMotion}
+                    selectedRegion={selectedRegion}
+                    onSelectRegion={(r) => {
+                      setSelectedRegion(r.id);
+                      setPanelOpen(true);
+                    }}
+                    onHoverRegion={setHovered}
+                  />
+                )}
               </group>
               <LabelProjector bus={bus} />
             </Suspense>
@@ -189,6 +205,11 @@ export default function GalaxyExplorer({ data }: { data: GalaxyData }) {
             view={view.level}
             systems={visibleSystems}
             planets={system?.planets ?? []}
+            regions={planet?.regions ?? []}
+            onSelectRegion={(r) => {
+              setSelectedRegion(r.id);
+              setPanelOpen(true);
+            }}
             worlds={data.worlds}
             overlays={overlays}
             hovered={hovered}
@@ -283,7 +304,7 @@ export default function GalaxyExplorer({ data }: { data: GalaxyData }) {
             <SystemPanel system={system} worldName={worldOf(system)?.name} onSelect={selectPlanet} onBack={up} />
           )}
           {view.level === "planet" && system && planet && (
-            <PlanetPanel planet={planet} system={system} onBack={up} />
+            <PlanetPanel planet={planet} system={system} onBack={up} selectedRegion={selectedRegion} onSelectRegion={(r) => setSelectedRegion(r.id)} />
           )}
         </div>
       </aside>
@@ -454,8 +475,22 @@ function SystemPanel({
   );
 }
 
-function PlanetPanel({ planet, system, onBack }: { planet: MapPlanet; system: MapSystem; onBack: () => void }) {
+function PlanetPanel({
+  planet,
+  system,
+  onBack,
+  selectedRegion,
+  onSelectRegion,
+}: {
+  planet: MapPlanet;
+  system: MapSystem;
+  onBack: () => void;
+  selectedRegion: string | null;
+  onSelectRegion: (r: MapRegion) => void;
+}) {
   const look = planetLook(planet.id, planet.classification, planet.genParams);
+  const planetHref = `/w/${system.worldSlug}/systems/${system.slug}/${planet.slug}`;
+  const region = planet.regions.find((r) => r.id === selectedRegion);
   return (
     <div className="space-y-4">
       <PanelHeading kicker={`${system.name} System`} title={planet.name} />
@@ -465,8 +500,40 @@ function PlanetPanel({ planet, system, onBack }: { planet: MapPlanet; system: Ma
         <Fact k="Orbit" v={planet.orbitIndex ? `${planet.orbitIndex}` : "Unknown"} />
         <Fact k="Surface water" v={`${Math.round(look.water * 100)}%`} />
       </dl>
+      {region && (
+        <section className="cogitator p-3 text-sm" aria-live="polite">
+          <p className="text-[10px] uppercase tracking-[0.25em] opacity-80">
+            {[region.kind, formatLatLng(region.lat, region.lng)].filter(Boolean).join(" · ")}
+          </p>
+          <p className="mt-1 text-base uppercase tracking-widest">{region.name}</p>
+          {region.summary && <p className="mt-2 line-clamp-5 normal-case opacity-90">{region.summary}</p>}
+          <Link href={`${planetHref}/${region.slug}`} className="tap mt-1">Open region record →</Link>
+        </section>
+      )}
+      {planet.regions.length > 0 && (
+        <section>
+          <h2 className="mb-2 font-display text-xs uppercase tracking-[0.25em] text-gold">Regions</h2>
+          <ul className="space-y-1">
+            {planet.regions.map((r) => (
+              <li key={r.id}>
+                <button
+                  type="button"
+                  onClick={() => onSelectRegion(r)}
+                  aria-pressed={r.id === selectedRegion}
+                  className={`flex w-full items-baseline gap-2 border px-2 py-1.5 text-left text-sm hover:border-line hover:bg-hull ${
+                    r.id === selectedRegion ? "border-gold/60 bg-hull" : "border-transparent"
+                  }`}
+                >
+                  <span className="flex-1 text-parchment">{r.name}</span>
+                  <span className="font-mono text-[10px] text-ash">{formatLatLng(r.lat, r.lng)}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <div className="flex flex-wrap gap-2">
-        <Link href={`/w/${system.worldSlug}/systems/${system.slug}/${planet.slug}`} className="btn btn-primary">Open record</Link>
+        <Link href={planetHref} className="btn btn-primary">Open record</Link>
         <button type="button" onClick={onBack} className="btn btn-ghost">← {system.name}</button>
       </div>
     </div>
@@ -510,6 +577,8 @@ function MapLabels({
   view,
   systems,
   planets,
+  regions,
+  onSelectRegion,
   worlds,
   overlays,
   hovered,
@@ -520,6 +589,8 @@ function MapLabels({
   view: MapView["level"];
   systems: MapSystem[];
   planets: MapPlanet[];
+  regions: MapRegion[];
+  onSelectRegion: (r: MapRegion) => void;
   worlds: GalaxyData["worlds"];
   overlays: Overlays;
   hovered: string | null;
@@ -575,6 +646,16 @@ function MapLabels({
             <span className="block pb-1">
               <button type="button" tabIndex={-1} onClick={() => onSelectPlanet(p)} className={labelButton}>
                 {p.name}
+              </button>
+            </span>
+          </MapLabel>
+        ))}
+      {view === "planet" &&
+        regions.map((r) => (
+          <MapLabel key={r.id} bus={bus} id={`region:${r.id}`} hidden={!overlays.labels && hovered !== r.id} globe>
+            <span className="block pb-1">
+              <button type="button" tabIndex={-1} onClick={() => onSelectRegion(r)} className={`${labelButton} text-[10px]`}>
+                {r.name}
               </button>
             </span>
           </MapLabel>

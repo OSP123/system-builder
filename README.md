@@ -81,6 +81,14 @@ The address bar tracks the level (`/galaxy?system=…&planet=…`), so links can
 
 **Planet looks** come from the classification (Hive, Forge, Agri, Death, Ocean, Ice, Desert, Daemon, Dead, Shrine…). A planet's *Generator parameters* JSON overrides any of: `seed`, `water`, `clouds`, `ice`, `lights`, `lava` (all 0–1), `detail`, `size`, `atmosphere`, `atmosphereStrength`, `cloudColor`, `lightsColor`, and `palette` (`deep`, `shallow`, `low`, `mid`, `high`, `peak` as `#rrggbb`). For example: `{"water": 0.9, "clouds": 0.3, "palette": {"deep": "#0a3a6b"}}`.
 
+## Planet regions
+
+Planets can have **regions**, such as theatres of war or hive cities. Each has a kind, a description and a terrain note, a latitude and longitude, and a list of sectors. A sector can carry a points level and a polygon on an 800×500 tactical map. Region pages draw that map auspex-style; on the galaxy map, regions are markers on the planet's globe. Add them from a planet's page in the CMS.
+
+## Importing worlds
+
+`src/lib/worlds/` holds worlds described as data (world, system, planet, regions, records, characters, narratives). `npm run db:import-worlds` creates whatever is missing and never changes existing records, so CMS edits are safe; Render runs it on every boot. **Vespera Prime** (from the slow-grow-trainer project) is the first. Its theatre artwork is not included pending the artist's permission, and its players' lore and admin-placed map locations live in that app's database, so they would need an export.
+
 ## Star system themes
 
 Each star system has a **Theme** section in the CMS: a preset (Imperial, Blood & Brass, Frost, Toxic, Warp-touched, Forge, Abyss, Ash), optional colour overrides, an atmosphere wash and an optional backdrop image. It applies to the system's page and all of its planets, with a live preview in the editor. Logic lives in `src/lib/theme.ts`.

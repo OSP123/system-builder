@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import type { z } from "zod";
 import { db } from "./db";
 import { canContribute, canEditRecord, canManageWorld, isAdmin, type Actor } from "./permissions";
-import type { articleSchema, planetSchema, systemSchema, worldSchema } from "./validation";
+import type { articleSchema, planetSchema, regionSchema, systemSchema, worldSchema } from "./validation";
 
 /**
  * Content mutations with authorization (rules in permissions.ts). Server
@@ -31,6 +31,7 @@ type WorldInput = z.output<typeof worldSchema>;
 type ArticleInput = z.output<typeof articleSchema>;
 type SystemInput = z.output<typeof systemSchema>;
 type PlanetInput = z.output<typeof planetSchema>;
+type RegionInput = z.output<typeof regionSchema>;
 
 async function findWorld(worldId: string) {
   const world = await db.world.findUnique({ where: { id: worldId }, select: { id: true, ownerId: true, published: true } });
@@ -208,11 +209,46 @@ export async function updatePlanet(actor: Actor, planetId: string, data: PlanetI
   return guardSlug(() => db.planet.update({ where: { id: planetId }, data: planetData(data) }));
 }
 
+/** Deleting a planet also deletes its regions, so non-admins may only do it when every region is theirs too. */
 export async function deletePlanet(actor: Actor, planetId: string) {
   const planet = await findPlanet(planetId);
   if (!planet) return;
   assertCanEditRecord(actor, planet);
+  if (!isAdmin(actor)) {
+    const others = await db.region.count({ where: { planetId, OR: [{ authorId: null }, { authorId: { not: actor.id } }] } });
+    if (others > 0) throw new ForbiddenError("You do not have permission to delete regions other contributors added to this planet");
+  }
   await db.planet.delete({ where: { id: planetId } });
+}
+
+// ---------- Planet regions ----------
+
+const regionData = (d: RegionInput) => ({ ...d, sectors: d.sectors as Prisma.InputJsonValue });
+
+/** Anyone who may contribute to the world may add a region to any of its planets. */
+export async function createRegion(actor: Actor, planetId: string, data: RegionInput) {
+  const planet = await findPlanet(planetId);
+  if (!planet) throw new ContentError("Planet not found");
+  await assertCanContribute(actor, planet.system.worldId);
+  return guardSlug(() => db.region.create({ data: { ...regionData(data), planetId, authorId: actor.id } }));
+}
+
+async function findRegion(id: string) {
+  return db.region.findUnique({ where: { id }, select: { authorId: true } });
+}
+
+export async function updateRegion(actor: Actor, regionId: string, data: RegionInput) {
+  const region = await findRegion(regionId);
+  if (!region) throw new ContentError("Region not found");
+  assertCanEditRecord(actor, region);
+  return guardSlug(() => db.region.update({ where: { id: regionId }, data: regionData(data) }));
+}
+
+export async function deleteRegion(actor: Actor, regionId: string) {
+  const region = await findRegion(regionId);
+  if (!region) return;
+  assertCanEditRecord(actor, region);
+  await db.region.delete({ where: { id: regionId } });
 }
 
 // ---------- Media ----------

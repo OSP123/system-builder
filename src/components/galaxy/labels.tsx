@@ -35,6 +35,7 @@ export function useAnchor(bus: LabelBus, id: string, anchor: THREE.Object3D | TH
 export function LabelProjector({ bus }: { bus: LabelBus }) {
   const { camera, size } = useThree();
   const tmp = useMemo(() => new THREE.Vector3(), []);
+  const toCamera = useMemo(() => new THREE.Vector3(), []);
   useFrame(() => {
     for (const [id, el] of bus.elements) {
       const anchor = bus.anchors.get(id);
@@ -46,7 +47,9 @@ export function LabelProjector({ bus }: { bus: LabelBus }) {
       else anchor.getWorldPosition(tmp);
       // Level of detail: reference labels only appear once the camera is close enough.
       const maxDistance = Number(el.dataset.maxDistance) || Infinity;
-      const tooFar = camera.position.distanceTo(tmp) > maxDistance;
+      let tooFar = camera.position.distanceTo(tmp) > maxDistance;
+      // On a globe centred at the origin, hide labels on the far side of the planet.
+      if (el.dataset.globe && tmp.dot(toCamera.copy(camera.position).sub(tmp)) < 0) tooFar = true;
       tmp.project(camera);
       const behind = tmp.z > 1 || tmp.z < -1;
       el.style.visibility = behind || tooFar ? "hidden" : "visible";
@@ -65,6 +68,7 @@ export function MapLabel({
   id,
   hidden,
   maxDistance,
+  globe,
   children,
 }: {
   bus: LabelBus;
@@ -72,6 +76,8 @@ export function MapLabel({
   hidden?: boolean;
   /** Hide the label while the camera is further than this from it (scene units). */
   maxDistance?: number;
+  /** The anchor sits on a globe centred at the origin: hide it while on the far side. */
+  globe?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -84,6 +90,7 @@ export function MapLabel({
       className="pointer-events-none invisible absolute left-0 top-0 whitespace-nowrap"
       style={{ display: hidden ? "none" : undefined }}
       data-max-distance={maxDistance}
+      data-globe={globe ? "1" : undefined}
     >
       {children}
     </div>

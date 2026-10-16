@@ -237,7 +237,7 @@ describe("map state", () => {
     systems: [
       {
         id: "s1", slug: "cerulean", name: "Cerulean", starType: null, segmentum: null, x: 0, y: 0, z: 0, worldSlug: "cerulean",
-        planets: [{ id: "p1", slug: "cerulean", name: "Cerulean", classification: null, orbitIndex: 1, population: null, genParams: null }],
+        planets: [{ id: "p1", slug: "cerulean", name: "Cerulean", classification: null, orbitIndex: 1, population: null, genParams: null, regions: [] }],
       },
     ],
   };

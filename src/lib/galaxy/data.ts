@@ -24,7 +24,20 @@ export async function getGalaxyData(): Promise<GalaxyData> {
           z: true,
           planets: {
             where: { published: true },
-            select: { id: true, slug: true, name: true, classification: true, orbitIndex: true, population: true, genParams: true },
+            select: {
+              id: true,
+              slug: true,
+              name: true,
+              classification: true,
+              orbitIndex: true,
+              population: true,
+              genParams: true,
+              regions: {
+                where: { published: true },
+                orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+                select: { id: true, slug: true, name: true, kind: true, summary: true, lat: true, lng: true },
+              },
+            },
           },
         },
       },

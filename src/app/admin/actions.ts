@@ -21,6 +21,7 @@ import {
   narrativeSchema,
   newUserSchema,
   planetSchema,
+  regionSchema,
   resetPasswordSchema,
   resetWithTokenSchema,
   systemSchema,
@@ -320,4 +321,35 @@ export async function resetPasswordFromLink(_prev: ActionState, form: FormData):
   const ok = await resetPasswordWithToken(parsed.data.token, parsed.data.password);
   if (!ok) return { errors: { _form: "This link is invalid, expired or already used. Request a new one." } };
   redirect("/admin/login?reset=1");
+}
+
+// ---------- Planet regions ----------
+
+const regionBase = (worldId: string, systemId: string, planetId: string) =>
+  `/admin/worlds/${worldId}/systems/${systemId}/planets/${planetId}/regions`;
+
+export async function createRegion(
+  worldId: string,
+  systemId: string,
+  planetId: string,
+  _prev: ActionState,
+  form: FormData,
+): Promise<ActionState> {
+  const r = await mutate(regionSchema, form, (u, d) => content.createRegion(u, planetId, d));
+  if (!r.ok) return r.state;
+  redirect(`${regionBase(worldId, systemId, planetId)}/${r.result.id}?created=1`);
+}
+
+export async function updateRegion(regionId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
+  const r = await mutate(regionSchema, form, (u, d) => content.updateRegion(u, regionId, d));
+  if (!r.ok) return r.state;
+  revalidatePath("/w", "layout");
+  revalidatePath("/galaxy");
+  return { saved: true };
+}
+
+export async function deleteRegion(worldId: string, systemId: string, planetId: string, regionId: string) {
+  const user = await requireUser();
+  await content.deleteRegion(user, regionId);
+  redirect(`/admin/worlds/${worldId}/systems/${systemId}/planets/${planetId}`);
 }

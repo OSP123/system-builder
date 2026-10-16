@@ -166,3 +166,14 @@ Tasks:
 Follow-ups:
 - Merge fix/galaxy-lore-positions and push to deploy
 
+Date: 2026-10-16
+Tasks:
+- Imported Vespera Prime from ../slow-grow-trainer as a new world (spelling "Vespera" per user): world (The Siege of Vespera), Vespera system in Segmentum Solar, planet Vespera Prime (Hive World, volcanic look after the source texture), the six theatres of war with their globe coordinates, narratives, terrain descriptions and five sectors each (points levels and tactical-map shapes), The Siege of Vespera record, characters Silvanus Petro (deceased) and Charmeleus Kane, and the vox transmission as a narrative. Text carried over as written
+- New planet regions feature (model, CMS with sector editor and live tactical-map preview, public region pages with auspex map, globe markers in the galaxy planet view with far-side label hiding), generic create-only world importer (src/lib/world-import.ts, npm run db:import-worlds, run on Render boot)
+- Verified: 153 Vitest + 11 Playwright (new regions e2e; phone guard covers region pages); screenshots desktop/phone
+Follow-ups:
+- Theatre artwork by Yaro (iyaro87): add once he agrees, with credit
+- Players' army lore, battle reports and admin-placed map_locations live in the slow-grow-trainer Supabase database: needs an export and the players' agreement
+- slow-grow-trainer's CampaignTimeline still says "Vesperia Prime"
+- Merge feature/vespera-prime and push to deploy
+

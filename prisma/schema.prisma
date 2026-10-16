@@ -67,6 +67,7 @@ model User {
   characters        Character[]
   units             Unit[]
   narratives        Narrative[]
+  regions           Region[]
 }
 
 /// A custom setting inside the 40k universe (e.g. Cerulean). Every piece of
@@ -171,6 +172,7 @@ model Planet {
   coverImage     Media?      @relation("PlanetCover", fields: [coverImageId], references: [id], onDelete: SetNull)
   articles       Article[]
   natives        Character[] @relation("CharacterHomeworld")
+  regions        Region[]
   narratives     Narrative[]
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -309,4 +311,31 @@ model PasswordResetToken {
   createdAt DateTime  @default(now())
 
   @@index([userId, createdAt])
+}
+
+/// A named region of a planet, e.g. a theatre of war, placed on its globe.
+model Region {
+  id        String   @id @default(cuid())
+  planetId  String
+  planet    Planet   @relation(fields: [planetId], references: [id], onDelete: Cascade)
+  slug      String
+  name      String
+  /// What kind of place this is, e.g. "Theatre of war", "Hive city".
+  kind      String?
+  summary   String?  @db.Text
+  terrain   String?
+  /// Position on the planet's globe, in degrees.
+  lat       Float    @default(0)
+  lng       Float    @default(0)
+  /// [{ name, pointsLevel?, shape?, cx?, cy? }]: sub-areas, optionally with an
+  /// 800x500 tactical-map polygon ("x,y x,y ...") and label point.
+  sectors   Json     @default("[]")
+  sortOrder Int      @default(0)
+  published Boolean  @default(false)
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([planetId, slug])
 }

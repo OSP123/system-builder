@@ -5,6 +5,7 @@ import { Markdown } from "@/components/Markdown";
 import { MediaImage } from "@/components/MediaImage";
 import { ThemeScope } from "@/components/ThemeScope";
 import { CATEGORY_LABELS } from "@/lib/categories";
+import { formatLatLng } from "@/lib/regions";
 import { getPublishedPlanet } from "@/lib/queries";
 import { archiveRef } from "@/lib/thoughts";
 import { loadWorld } from "../../../data";
@@ -52,6 +53,24 @@ export default async function PlanetPage({ params }: Props) {
             <div className="mt-8">
               <Markdown>{planet.description}</Markdown>
             </div>
+          )}
+          {planet.regions.length > 0 && (
+            <section className="mt-10">
+              <h2 className="font-display text-2xl uppercase tracking-[0.2em] text-gold">Regions</h2>
+              <ul className="mt-4 grid gap-4 sm:grid-cols-2">
+                {planet.regions.map((r) => (
+                  <li key={r.slug}>
+                    <Link href={`${base}/systems/${planet.system.slug}/${planet.slug}/${r.slug}`} className="gothic-frame block h-full p-4">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-phosphor/80">
+                        {[r.kind, formatLatLng(r.lat, r.lng)].filter(Boolean).join(" · ")}
+                      </p>
+                      <p className="mt-1 font-gothic text-2xl font-bold leading-tight text-parchment [text-shadow:1px_1px_0_#000]">{r.name}</p>
+                      {r.summary && <p className="mt-2 line-clamp-3 font-serif text-base italic leading-snug text-ash">{r.summary}</p>}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
         </div>
         <aside className="cogitator h-fit p-5 text-sm">

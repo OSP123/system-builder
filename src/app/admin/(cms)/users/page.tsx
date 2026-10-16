@@ -21,7 +21,7 @@ export default async function UsersPage() {
         <tbody>
           {users.map((u) => {
             const c = u._count;
-            const records = c.articles + c.characters + c.units + c.narratives + c.systems + c.planets;
+            const records = c.articles + c.characters + c.units + c.narratives + c.systems + c.planets + c.regions;
             return (
               <tr key={u.id} className="border-t border-line">
                 <td className="py-3">

@@ -3,6 +3,7 @@ import { ArticleCategory } from "@prisma/client";
 import { SLUG_PATTERN, slugify } from "./slug";
 import { DEFAULT_THEME, HEX, PRESET_KEYS, type SystemTheme } from "./theme";
 import { CHARACTER_STATUSES, FORCE_SLOTS, specialRule, statProfile } from "./codex";
+import { sectorSchema } from "./regions";
 
 // HTML forms send "" for empty inputs; treat those as absent.
 const optionalText = (max: number) =>
@@ -344,3 +345,20 @@ export const resetWithTokenSchema = z
     confirmPassword: z.string(),
   })
   .refine((d) => d.password === d.confirmPassword, { message: "Passwords do not match", path: ["confirmPassword"] });
+
+// ---------- Planet regions ----------
+
+export const regionSchema = z
+  .object({
+    name: z.string().trim().min(1, "Name is required").max(120),
+    slug: slugField,
+    kind: optionalText(80),
+    summary: optionalText(20000),
+    terrain: optionalText(500),
+    lat: z.coerce.number().min(-90, "Latitude is between -90 and 90").max(90, "Latitude is between -90 and 90").default(0),
+    lng: z.coerce.number().min(-180, "Longitude is between -180 and 180").max(180, "Longitude is between -180 and 180").default(0),
+    sectors: jsonArray(sectorSchema, 30, "Sectors"),
+    sortOrder,
+    published: checkbox,
+  })
+  .transform((d) => withSlug(d, d.name));

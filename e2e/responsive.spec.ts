@@ -27,6 +27,10 @@ async function pagePaths() {
   const narrative = await one(db.narrative.findFirst({ where: { worldId: codex.id } }));
   const system = await one(db.starSystem.findFirst({ where: { worldId: world.id }, include: { planets: true } }));
   const user = await one(db.user.findFirst({ where: { role: "EDITOR" } }));
+  const region = await one(db.region.findFirst({ include: { planet: { include: { system: { include: { world: true } } } } } }));
+  const rp = region.planet;
+  const regionPublic = `/w/${rp.system.world.slug}/systems/${rp.system.slug}/${rp.slug}/${region.slug}`;
+  const regionAdmin = `/admin/worlds/${rp.system.worldId}/systems/${rp.systemId}/planets/${rp.id}/regions/${region.id}`;
   await db.$disconnect();
   const w = `/admin/worlds/${world.id}`;
   const c = `/admin/worlds/${codex.id}`;
@@ -44,6 +48,7 @@ async function pagePaths() {
       `/w/${world.slug}/systems`,
       `/w/${world.slug}/systems/${system.slug}`,
       `/w/${world.slug}/systems/${system.slug}/${system.planets[0].slug}`,
+      regionPublic,
       "/galaxy",
       "/admin/login",
       "/admin/forgot-password",
@@ -61,6 +66,7 @@ async function pagePaths() {
       `${w}/systems/${system.id}`,
       `${w}/systems/${system.id}/planets/${system.planets[0].id}`,
       `${w}/media`,
+      regionAdmin,
       "/admin/users",
       `/admin/users/${user.id}`,
       "/admin/account",
