@@ -13,7 +13,9 @@ import {
   wedgeBoundaryLine,
 } from "@/lib/galaxy/coords";
 import { generateGalaxy } from "@/lib/galaxy/generate";
-import { orbitPeriod, orbitRadius, planetLook, sortByOrbit } from "@/lib/galaxy/planets";
+import { mapPlanetLook, orbitPeriod, orbitRadius, planetLook, sortByOrbit } from "@/lib/galaxy/planets";
+import { existsSync } from "node:fs";
+import { VESPERA_PRIME } from "@/lib/worlds/vespera-prime";
 import { gaussian, hashString, rng } from "@/lib/galaxy/random";
 import { parseView, viewQuery, worldColor, type GalaxyData } from "@/lib/galaxy/state";
 import { starLook } from "@/lib/galaxy/stars";
@@ -215,6 +217,28 @@ describe("planetLook", () => {
   });
 });
 
+describe("planet textures", () => {
+  it("accepts only same-site image paths", () => {
+    expect(planetLook("p", null, { texture: "/textures/vespera-prime.jpg" }).texture).toBe("/textures/vespera-prime.jpg");
+    expect(planetLook("p", null, { texture: "/media/abc123.webp" }).texture).toBe("/media/abc123.webp");
+    for (const bad of ["https://evil.example/x.jpg", "//evil.example/x.jpg", "/textures/../.env", "/textures/x.svg", "javascript:alert(1)"]) {
+      expect(planetLook("p", null, { texture: bad }).texture).toBeUndefined();
+    }
+  });
+
+  it("prefers an uploaded texture over one in genParams", () => {
+    const base = { id: "p", classification: null, genParams: { texture: "/textures/a.jpg" } };
+    expect(mapPlanetLook({ ...base, textureUrl: null }).texture).toBe("/textures/a.jpg");
+    expect(mapPlanetLook({ ...base, textureUrl: "/media/b.png" }).texture).toBe("/media/b.png");
+  });
+
+  it("ships the texture Vespera Prime points at", () => {
+    const texture = (VESPERA_PRIME.planet.genParams as { texture: string }).texture;
+    expect(planetLook("v", "Hive World", VESPERA_PRIME.planet.genParams).texture).toBe(texture);
+    expect(existsSync(`public${texture}`)).toBe(true);
+  });
+});
+
 describe("orbits", () => {
   it("spaces orbits outward and slows outer planets", () => {
     expect(orbitRadius(1)).toBeGreaterThan(orbitRadius(0));
@@ -237,7 +261,7 @@ describe("map state", () => {
     systems: [
       {
         id: "s1", slug: "cerulean", name: "Cerulean", starType: null, segmentum: null, x: 0, y: 0, z: 0, worldSlug: "cerulean",
-        planets: [{ id: "p1", slug: "cerulean", name: "Cerulean", classification: null, orbitIndex: 1, population: null, genParams: null, regions: [] }],
+        planets: [{ id: "p1", slug: "cerulean", name: "Cerulean", classification: null, orbitIndex: 1, population: null, genParams: null, textureUrl: null, regions: [] }],
       },
     ],
   };

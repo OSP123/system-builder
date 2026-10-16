@@ -32,6 +32,7 @@ export async function getGalaxyData(): Promise<GalaxyData> {
               orbitIndex: true,
               population: true,
               genParams: true,
+              textureImage: { select: { key: true } },
               regions: {
                 where: { published: true },
                 orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -46,6 +47,12 @@ export async function getGalaxyData(): Promise<GalaxyData> {
 
   return {
     worlds: worlds.map((w, i) => ({ id: w.id, slug: w.slug, name: w.name, color: worldColor(i) })),
-    systems: worlds.flatMap((w) => w.systems.map(({ planets, ...s }) => ({ ...s, worldSlug: w.slug, planets }))),
+    systems: worlds.flatMap((w) =>
+      w.systems.map(({ planets, ...s }) => ({
+        ...s,
+        worldSlug: w.slug,
+        planets: planets.map(({ textureImage, ...p }) => ({ ...p, textureUrl: textureImage ? `/media/${textureImage.key}` : null })),
+      })),
+    ),
   };
 }

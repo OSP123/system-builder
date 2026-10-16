@@ -4,7 +4,7 @@ import { OrbitControls, Stars } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { planetLook } from "@/lib/galaxy/planets";
+import { mapPlanetLook } from "@/lib/galaxy/planets";
 import type { MapPlanet, MapRegion } from "@/lib/galaxy/state";
 import { latLngToVector } from "@/lib/regions";
 import { CameraRig, type Shot } from "./CameraRig";
@@ -24,7 +24,7 @@ type Props = {
 };
 
 export function PlanetScene({ planet, bus, reducedMotion, selectedRegion, onSelectRegion, onHoverRegion }: Props) {
-  const look = useMemo(() => planetLook(planet.id, planet.classification, planet.genParams), [planet]);
+  const look = useMemo(() => mapPlanetLook(planet), [planet]);
   // Slower spin when there are regions to read and click.
   const spin = reducedMotion ? 0 : planet.regions.length ? 0.025 : 0.06;
   return (

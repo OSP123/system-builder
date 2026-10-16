@@ -165,6 +165,7 @@ export const planetSchema = z
       }),
     published: checkbox,
     coverImageId: optionalId,
+    textureImageId: optionalId,
   })
   .transform((d) => withSlug(d, d.name));
 

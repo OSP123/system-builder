@@ -73,8 +73,10 @@ Six war zones divide the planet: **The Hive Spires**, **The Ash Wastes**, **The 
     orbitIndex: 1,
     published: true,
     description: `The administrative and population hubs of the planet rise in the Hive Spires. Beyond them lie rad-soaked ash wastes, Adeptus Mechanicus forges built over deep crust fissures, blast craters dating back to the Horus Heresy, and chemical-soup seas that cool the planet's massive industrial sectors. An orbital comms relay secures the skies.`,
-    // After the planet texture used by the slow-grow-trainer globe: dark, volcanic, lava-veined land and black seas.
+    // The slow-grow-trainer globe's own texture (public/images/planet-texture.png there), bundled here so it
+    // survives free-tier restarts; the colours below are only the fallback while it loads.
     genParams: {
+      texture: "/textures/vespera-prime.jpg",
       seed: 7314,
       water: 0.35,
       clouds: 0.35,

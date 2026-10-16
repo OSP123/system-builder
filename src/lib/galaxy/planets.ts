@@ -30,6 +30,11 @@ export type PlanetLook = {
   detail: number;
   /** Relative size in the system view. */
   size: number;
+  /**
+   * Optional equirectangular image wrapped around the globe instead of the
+   * generated surface: a site path under /textures/ or an uploaded /media/ file.
+   */
+  texture?: string;
 };
 
 const BASE: Omit<PlanetLook, "seed"> = {
@@ -68,6 +73,8 @@ const PRESETS: [RegExp, Preset][] = [
 ];
 
 const HEX = /^#[0-9a-f]{6}$/i;
+/** Only same-site images: bundled /textures/ files or uploaded /media/ files. */
+export const TEXTURE_PATH = /^\/(textures|media)\/[A-Za-z0-9._-]+\.(jpe?g|png|webp|avif)$/;
 const clamp01 = (v: unknown, d: number) => (typeof v === "number" && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : d);
 
 /** Resolve the look for a planet: classification preset, then genParams overrides. */
@@ -89,6 +96,7 @@ export function planetLook(planetId: string, classification: string | null | und
     }
     if (typeof g.detail === "number" && g.detail > 0 && g.detail <= 8) look.detail = g.detail;
     if (typeof g.size === "number" && g.size > 0 && g.size <= 4) look.size = g.size;
+    if (typeof g.texture === "string" && TEXTURE_PATH.test(g.texture)) look.texture = g.texture;
     if (g.palette && typeof g.palette === "object") {
       for (const [k, v] of Object.entries(g.palette as Record<string, unknown>)) {
         if (k in look.palette && typeof v === "string" && HEX.test(v)) look.palette[k as keyof Palette] = v;
@@ -96,6 +104,12 @@ export function planetLook(planetId: string, classification: string | null | und
     }
   }
   return look;
+}
+
+/** The look for a map planet: its uploaded texture, if any, overrides genParams. */
+export function mapPlanetLook(p: { id: string; classification: string | null; genParams: unknown; textureUrl: string | null }): PlanetLook {
+  const look = planetLook(p.id, p.classification, p.genParams);
+  return p.textureUrl && TEXTURE_PATH.test(p.textureUrl) ? { ...look, texture: p.textureUrl } : look;
 }
 
 /** Orbit radius in system-view units for the planet at `position` (0-based, innermost first). */

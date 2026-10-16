@@ -177,3 +177,11 @@ Follow-ups:
 - slow-grow-trainer's CampaignTimeline still says "Vesperia Prime"
 - Merge feature/vespera-prime and push to deploy
 
+Date: 2026-10-16
+Tasks:
+- Vespera Prime's globe now uses the original planet texture from slow-grow-trainer (copied byte-for-byte; it is a 1024x1024 JPEG, stored as public/textures/vespera-prime.jpg), oriented exactly like three-globe/react-globe.gl (default sphere UVs, rotation.y = -pi/2) so the theatre markers sit on the same terrain (Magma Forges on the volcanic crater)
+- Planets can wrap any texture: uploaded via a new "Globe texture" CMS picker (Planet.textureImageId) or bundled via genParams.texture (same-site /textures or /media paths only); lit by the star with a night-side lava glow; generated clouds off for textured planets
+- Verified: 156 Vitest + 11 Playwright; screenshots of the textured globe
+Follow-ups:
+- Confirm credit for the planet texture (the source project credits its environmental imagery to Yaro)
+

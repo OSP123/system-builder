@@ -85,9 +85,11 @@ The address bar tracks the level (`/galaxy?system=…&planet=…`), so links can
 
 Planets can have **regions**, such as theatres of war or hive cities. Each has a kind, a description and a terrain note, a latitude and longitude, and a list of sectors. A sector can carry a points level and a polygon on an 800×500 tactical map. Region pages draw that map auspex-style; on the galaxy map, regions are markers on the planet's globe. Add them from a planet's page in the CMS.
 
+A planet can also wrap a **globe texture** around itself instead of the generated surface: upload one with the planet's *Globe texture* picker, or point `genParams.texture` at a file bundled under `public/textures/`. It takes an equirectangular world map (longitude 180°W to 180°E left to right, north at the top), oriented like react-globe.gl, so coordinates and markers carry over unchanged from projects built on it. Bundled textures survive free-tier restarts; uploaded ones don't.
+
 ## Importing worlds
 
-`src/lib/worlds/` holds worlds described as data (world, system, planet, regions, records, characters, narratives). `npm run db:import-worlds` creates whatever is missing and never changes existing records, so CMS edits are safe; Render runs it on every boot. **Vespera Prime** (from the slow-grow-trainer project) is the first. Its theatre artwork is not included pending the artist's permission, and its players' lore and admin-placed map locations live in that app's database, so they would need an export.
+`src/lib/worlds/` holds worlds described as data (world, system, planet, regions, records, characters, narratives). `npm run db:import-worlds` creates whatever is missing and never changes existing records, so CMS edits are safe; Render runs it on every boot. **Vespera Prime** (from the slow-grow-trainer project) is the first. Its globe uses that project's original planet texture (`public/textures/vespera-prime.jpg`; the project credits its environmental imagery to Yaro, Discord iyaro87). Its theatre artwork is not included pending the artist's permission, and its players' lore and admin-placed map locations live in that app's database, so they would need an export.
 
 ## Star system themes
 

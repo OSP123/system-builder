@@ -273,3 +273,38 @@ export function starMaterial(hex: string) {
     `,
   });
 }
+
+/**
+ * Surface from an image map, lit by the star. The texture's colours are used
+ * as-is (no colour-space conversion, matching the other shaders); on the night
+ * side, hot lava-coloured pixels glow faintly.
+ */
+export function texturedSurfaceMaterial(texture: THREE.Texture) {
+  return new THREE.ShaderMaterial({
+    uniforms: { uMap: { value: texture }, uSunDir: { value: new THREE.Vector3(1, 0.35, 0.6).normalize() } },
+    vertexShader: /* glsl */ `
+      varying vec2 vUv;
+      varying vec3 vNormalW;
+      void main() {
+        vUv = uv;
+        vNormalW = normalize(mat3(modelMatrix) * normal);
+        gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform sampler2D uMap;
+      uniform vec3 uSunDir;
+      varying vec2 vUv;
+      varying vec3 vNormalW;
+      void main() {
+        vec3 col = texture2D(uMap, vUv).rgb;
+        float diffuse = max(dot(normalize(vNormalW), uSunDir), 0.0);
+        vec3 lit = col * (0.12 + 0.95 * diffuse);
+        float night = smoothstep(0.15, -0.05, dot(normalize(vNormalW), uSunDir));
+        float hot = smoothstep(0.25, 0.55, col.r - col.b) * smoothstep(0.35, 0.7, col.r);
+        lit += col * hot * night * 1.4;
+        gl_FragColor = vec4(lit, 1.0);
+      }
+    `,
+  });
+}

@@ -7,6 +7,8 @@ export type MapPlanet = {
   orbitIndex: number;
   population: string | null;
   genParams: unknown;
+  /** Uploaded globe texture (/media/...), which takes precedence over a texture in genParams. */
+  textureUrl: string | null;
   regions: MapRegion[];
 };
 export type MapRegion = { id: string; slug: string; name: string; kind: string | null; summary: string | null; lat: number; lng: number };

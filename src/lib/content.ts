@@ -194,6 +194,7 @@ export async function createPlanet(actor: Actor, systemId: string, data: PlanetI
   if (!sys) throw new ContentError("Star system not found");
   await assertCanContribute(actor, sys.worldId);
   await assertMediaInWorld(data.coverImageId, sys.worldId);
+  await assertMediaInWorld(data.textureImageId, sys.worldId, "textureImageId");
   return guardSlug(() => db.planet.create({ data: { ...planetData(data), systemId, authorId: actor.id } }));
 }
 
@@ -206,6 +207,7 @@ export async function updatePlanet(actor: Actor, planetId: string, data: PlanetI
   if (!planet) throw new ContentError("Planet not found");
   assertCanEditRecord(actor, planet);
   await assertMediaInWorld(data.coverImageId, planet.system.worldId);
+  await assertMediaInWorld(data.textureImageId, planet.system.worldId, "textureImageId");
   return guardSlug(() => db.planet.update({ where: { id: planetId }, data: planetData(data) }));
 }
 

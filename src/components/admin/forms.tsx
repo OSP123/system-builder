@@ -186,6 +186,9 @@ export function PlanetForm({ action, planet }: { action: Action; planet?: Planet
       <Field name="coverImageId" label="Image">
         <ImagePicker name="coverImageId" defaultValue={planet?.coverImageId} />
       </Field>
+      <Field name="textureImageId" label="Globe texture (optional)" hint="A world map wrapped around the planet on the galaxy map. Longitude runs left to right (180°W to 180°E), north at the top. Leave empty for a generated surface.">
+        <ImagePicker name="textureImageId" defaultValue={planet?.textureImageId} />
+      </Field>
       <Field name="description" label="Description (Markdown)">
         <MarkdownEditor name="description" defaultValue={planet?.description} rows={12} />
       </Field>

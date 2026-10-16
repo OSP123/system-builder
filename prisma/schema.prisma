@@ -170,6 +170,9 @@ model Planet {
   published      Boolean     @default(false)
   coverImageId   String?
   coverImage     Media?      @relation("PlanetCover", fields: [coverImageId], references: [id], onDelete: SetNull)
+  /// Optional equirectangular map wrapped around the globe instead of the generated surface.
+  textureImageId String?
+  textureImage   Media?      @relation("PlanetTexture", fields: [textureImageId], references: [id], onDelete: SetNull)
   articles       Article[]
   natives        Character[] @relation("CharacterHomeworld")
   regions        Region[]
@@ -200,6 +203,7 @@ model Media {
   characterPortraits Character[]  @relation("CharacterPortrait")
   unitImages         Unit[]       @relation("UnitImage")
   narrativeCovers    Narrative[]  @relation("NarrativeCover")
+  planetTextures     Planet[]     @relation("PlanetTexture")
 }
 
 /// A notable person of the world: "Dramatis Personae".

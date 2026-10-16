@@ -4,7 +4,7 @@ import { Line, OrbitControls, Stars } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { orbitPeriod, orbitRadius, planetLook, sortByOrbit } from "@/lib/galaxy/planets";
+import { mapPlanetLook, orbitPeriod, orbitRadius, sortByOrbit } from "@/lib/galaxy/planets";
 import { hashString } from "@/lib/galaxy/random";
 import type { MapPlanet, MapSystem } from "@/lib/galaxy/state";
 import { starLook } from "@/lib/galaxy/stars";
@@ -90,7 +90,7 @@ function OrbitingPlanet({
   onSelect: () => void;
   onHover: (on: boolean) => void;
 }) {
-  const look = useMemo(() => planetLook(planet.id, planet.classification, planet.genParams), [planet]);
+  const look = useMemo(() => mapPlanetLook(planet), [planet]);
   const holder = useRef<THREE.Group>(null);
   // The label anchor sits just above the planet and travels with it.
   const [labelAnchor, setLabelAnchor] = useState<THREE.Object3D | null>(null);

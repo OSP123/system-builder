@@ -1,10 +1,10 @@
 "use client";
 
-import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { useFrame, useLoader } from "@react-three/fiber";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { PlanetLook } from "@/lib/galaxy/planets";
-import { atmosphereMaterial, planetCloudsMaterial, planetSurfaceMaterial } from "./shaders";
+import { atmosphereMaterial, planetCloudsMaterial, planetSurfaceMaterial, texturedSurfaceMaterial } from "./shaders";
 
 type Props = {
   look: PlanetLook;
@@ -27,6 +27,8 @@ export function ProceduralPlanet({ look, radius = 1, segments = 96, spin = 0.05,
   const root = useRef<THREE.Group>(null);
   const body = useRef<THREE.Group>(null);
   const worldPos = useMemo(() => new THREE.Vector3(), []);
+  // Shared with the textured surface so both light the same way.
+  const sunDir = useRef(new THREE.Vector3(1, 0.35, 0.6).normalize());
   const cloudMesh = useRef<THREE.Mesh>(null);
 
   useEffect(
@@ -44,22 +46,25 @@ export function ProceduralPlanet({ look, radius = 1, segments = 96, spin = 0.05,
     clouds.uniforms.uTime.value = spin ? state.clock.elapsedTime : 0;
     if (litFromOrigin && root.current) {
       root.current.getWorldPosition(worldPos);
-      if (worldPos.lengthSq() > 0) {
-        const toStar = worldPos.clone().negate().normalize();
-        surface.uniforms.uSunDir.value.copy(toStar);
-        clouds.uniforms.uSunDir.value.copy(toStar);
-      }
+      if (worldPos.lengthSq() > 0) sunDir.current.copy(worldPos).negate().normalize();
     }
+    surface.uniforms.uSunDir.value.copy(sunDir.current);
+    clouds.uniforms.uSunDir.value.copy(sunDir.current);
   });
 
   return (
     <group ref={root}>
       <group ref={body} rotation={[0.25, 0, 0.08]}>
-        {/* Stops pointer events here, so markers on the far side can't be clicked through the planet. */}
-        <mesh material={surface} onClick={(e) => e.stopPropagation()} onPointerOver={(e) => e.stopPropagation()}>
-          <sphereGeometry args={[radius, segments, segments]} />
-        </mesh>
-        {look.clouds > 0 && (
+        {look.texture ? (
+          // Until the image loads, show the generated surface.
+          <Suspense fallback={<Surface material={surface} radius={radius} segments={segments} />}>
+            <TexturedSurface url={look.texture} radius={radius} segments={segments} sunDir={sunDir} />
+          </Suspense>
+        ) : (
+          <Surface material={surface} radius={radius} segments={segments} />
+        )}
+        {/* An image map carries its own clouds. */}
+        {look.clouds > 0 && !look.texture && (
           <mesh ref={cloudMesh} material={clouds}>
             <sphereGeometry args={[radius * 1.015, segments, segments]} />
           </mesh>
@@ -72,5 +77,48 @@ export function ProceduralPlanet({ look, radius = 1, segments = 96, spin = 0.05,
         </mesh>
       )}
     </group>
+  );
+}
+
+/** Stops pointer events at the surface, so markers on the far side can't be clicked through the planet. */
+const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
+
+function Surface({ material, radius, segments }: { material: THREE.Material; radius: number; segments: number }) {
+  return (
+    <mesh material={material} onClick={stop} onPointerOver={stop}>
+      <sphereGeometry args={[radius, segments, segments]} />
+    </mesh>
+  );
+}
+
+/**
+ * An image-mapped globe, oriented like three-globe (react-globe.gl): the
+ * sphere's default UVs turned a quarter turn so longitude 0 faces +Z, which is
+ * also how region markers are placed (see latLngToVector).
+ */
+function TexturedSurface({
+  url,
+  radius,
+  segments,
+  sunDir,
+}: {
+  url: string;
+  radius: number;
+  segments: number;
+  sunDir: React.RefObject<THREE.Vector3>;
+}) {
+  const texture = useLoader(THREE.TextureLoader, url);
+  const material = useMemo(() => {
+    texture.anisotropy = 8;
+    return texturedSurfaceMaterial(texture);
+  }, [texture]);
+  useEffect(() => () => material.dispose(), [material]);
+  useFrame(() => {
+    material.uniforms.uSunDir.value.copy(sunDir.current);
+  });
+  return (
+    <mesh material={material} rotation={[0, -Math.PI / 2, 0]} onClick={stop} onPointerOver={stop}>
+      <sphereGeometry args={[radius, segments, Math.max(16, segments / 2)]} />
+    </mesh>
   );
 }
