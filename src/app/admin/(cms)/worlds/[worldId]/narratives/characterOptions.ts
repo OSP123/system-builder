@@ -4,6 +4,6 @@ export function characterOptions(worldId: string) {
   return db.character.findMany({
     where: { worldId },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, title: true },
+    select: { id: true, name: true, title: true, playedBy: true },
   });
 }

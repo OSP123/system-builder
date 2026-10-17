@@ -55,7 +55,7 @@ export function ArticleForm({
 }: {
   action: Action;
   article?: Article;
-  systems: (Pick<StarSystem, "id" | "name"> & { planets: Pick<Planet, "id" | "name">[] })[];
+  systems: (Pick<StarSystem, "id" | "name"> & { planets: (Pick<Planet, "id" | "name"> & { regions?: Pick<Region, "id" | "name">[] })[] })[];
 }) {
   return (
     <ActionForm action={action}>
@@ -110,6 +110,7 @@ export function ArticleForm({
           </select>
         </Field>
       </div>
+      <RegionSelect planets={systems.flatMap((s) => s.planets)} value={article?.regionId} what="record" />
       <PublishedToggle defaultChecked={article?.published} />
       <SubmitButton>{article ? "Save record" : "Create record"}</SubmitButton>
     </ActionForm>
@@ -207,7 +208,28 @@ export function PlanetForm({ action, planet }: { action: Action; planet?: Planet
   );
 }
 
-type PlanetGroups = (Pick<StarSystem, "id" | "name"> & { planets: Pick<Planet, "id" | "name">[] })[];
+type PlanetGroups = (Pick<StarSystem, "id" | "name"> & { planets: PlanetWithRegions[] })[];
+type PlanetWithRegions = Pick<Planet, "id" | "name"> & { regions?: { id: string; name: string }[] };
+
+/** Regions grouped by planet; hidden when no planet has any. */
+function RegionSelect({ planets, value, what }: { planets: PlanetWithRegions[]; value?: string | null; what: string }) {
+  const withRegions = planets.filter((p) => p.regions?.length);
+  if (!withRegions.length) return null;
+  return (
+    <Field name="regionId" label="Region (optional)" hint={`A theatre or place on the planet; the ${what} is listed on its page.`}>
+      <select id="regionId" name="regionId" className="field" defaultValue={value ?? ""}>
+        <option value="">—</option>
+        {withRegions.map((p) => (
+          <optgroup key={p.id} label={p.name}>
+            {p.regions!.map((r) => (
+              <option key={r.id} value={r.id}>{r.name}</option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+    </Field>
+  );
+}
 
 function PlanetSelect({ name, label, groups, value }: { name: string; label: string; groups: PlanetGroups; value?: string | null }) {
   return (
@@ -241,6 +263,9 @@ export function CharacterForm({ action, character, planets }: { action: Action; 
         </Field>
         <Field name="faction" label="Faction / allegiance">
           <input id="faction" name="faction" className="field" defaultValue={character?.faction ?? ""} placeholder="Adeptus Custodes" />
+        </Field>
+        <Field name="playedBy" label="Commander" hint="The player's commander this character belongs to. Shown only in the CMS.">
+          <input id="playedBy" name="playedBy" className="field" defaultValue={character?.playedBy ?? ""} />
         </Field>
         <Field name="status" label="Status">
           <select id="status" name="status" className="field" defaultValue={character?.status ?? "ACTIVE"}>
@@ -352,7 +377,7 @@ export function NarrativeForm({
   action: Action;
   narrative?: Narrative & { characters: { id: string }[] };
   planets: PlanetGroups;
-  characters: { id: string; name: string; title: string | null }[];
+  characters: { id: string; name: string; title: string | null; playedBy: string | null }[];
 }) {
   return (
     <ActionForm action={action}>
@@ -388,6 +413,7 @@ export function NarrativeForm({
         <CharacterPicker name="characterIds" options={characters} initial={narrative?.characters.map((c) => c.id) ?? []} />
       </Field>
       <PlanetSelect name="planetId" label="Setting (optional)" groups={planets} value={narrative?.planetId} />
+      <RegionSelect planets={planets.flatMap((s) => s.planets)} value={narrative?.regionId} what="narrative" />
       <PublishedToggle defaultChecked={narrative?.published} />
       <SubmitButton>{narrative ? "Save narrative" : "Create narrative"}</SubmitButton>
     </ActionForm>

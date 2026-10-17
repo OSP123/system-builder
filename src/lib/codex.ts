@@ -37,12 +37,23 @@ const stat = z
   .max(5)
   .regex(/^[0-9DdXx+\-/*]*$/, "Use numbers, D, +, -, / or *");
 
+/** Movement also takes inches: 6", 12"+D6. Phone keyboards type smart quotes, so those count too. */
+const move = z
+  .string()
+  .trim()
+  .overwrite((v) => v.replace(/[“”″]/g, '"'))
+  .max(6)
+  .regex(/^[0-9DdXx+\-/*"]*$/, "Use numbers, D, +, -, / or \"");
+
 export const MODEL_STATS = ["ws", "bs", "s", "t", "w", "i", "a", "ld", "sv"] as const;
 export const VEHICLE_STATS = ["bs", "front", "side", "rear"] as const;
+/** 11th edition characteristics, shown in the same 3rd edition statline style. */
+export const ELEVENTH_STATS = ["m", "t", "sv", "inv", "w", "ld", "oc"] as const;
 
 export const STAT_HEADERS: Record<string, string> = {
   ws: "WS", bs: "BS", s: "S", t: "T", w: "W", i: "I", a: "A", ld: "Ld", sv: "Sv",
   front: "Front", side: "Side", rear: "Rear",
+  m: "M", inv: "Inv", oc: "OC",
 };
 
 const modelProfile = z.object({
@@ -57,15 +68,26 @@ const vehicleProfile = z.object({
   bs: stat, front: stat, side: stat, rear: stat,
 });
 
-export const statProfile = z.discriminatedUnion("kind", [modelProfile, vehicleProfile]);
+const eleventhProfile = z.object({
+  kind: z.literal("eleventh"),
+  name: z.string().trim().min(1, "Profile needs a name").max(60),
+  m: move, t: stat, sv: stat, inv: stat, w: stat, ld: stat, oc: stat,
+});
+
+export const statProfile = z.discriminatedUnion("kind", [modelProfile, vehicleProfile, eleventhProfile]);
 export type StatProfile = z.infer<typeof statProfile>;
 export type ModelProfile = z.infer<typeof modelProfile>;
 export type VehicleProfile = z.infer<typeof vehicleProfile>;
+export type EleventhProfile = z.infer<typeof eleventhProfile>;
+
+export const STATS_BY_KIND: Record<StatProfile["kind"], readonly string[]> = { model: MODEL_STATS, vehicle: VEHICLE_STATS, eleventh: ELEVENTH_STATS };
+export const KIND_LABELS: Record<StatProfile["kind"], string> = { model: "Model", vehicle: "Vehicle", eleventh: "11th ed." };
 
 export const emptyModelProfile = (name = ""): ModelProfile => ({
   kind: "model", name, ws: "", bs: "", s: "", t: "", w: "", i: "", a: "", ld: "", sv: "",
 });
 export const emptyVehicleProfile = (name = ""): VehicleProfile => ({ kind: "vehicle", name, bs: "", front: "", side: "", rear: "" });
+export const emptyEleventhProfile = (name = ""): EleventhProfile => ({ kind: "eleventh", name, m: "", t: "", sv: "", inv: "", w: "", ld: "", oc: "" });
 
 // ---------- Special rules ----------
 

@@ -33,6 +33,7 @@ export function getPublishedArticle(worldId: string, slug: string) {
       coverImage: true,
       system: { select: { slug: true, name: true, published: true } },
       planet: { select: { slug: true, name: true, published: true, system: { select: { slug: true } } } },
+      region: { select: { slug: true, name: true, published: true } },
     },
   });
 }
@@ -85,6 +86,8 @@ export function getWorldCharacters(worldId: string) {
 export function getPublishedCharacter(worldId: string, slug: string) {
   return db.character.findFirst({
     where: { worldId, slug, published: true },
+    // Who plays a character is for the CMS only.
+    omit: { playedBy: true },
     include: {
       portraitImage: true,
       homeworld: { select: { slug: true, name: true, published: true, system: { select: { slug: true, published: true } } } },
@@ -118,6 +121,7 @@ export function getPublishedNarrative(worldId: string, slug: string) {
     include: {
       coverImage: true,
       planet: { select: { slug: true, name: true, published: true, system: { select: { slug: true, published: true } } } },
+      region: { select: { slug: true, name: true, published: true, planetId: true } },
       characters: {
         where: { published: true },
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -143,6 +147,8 @@ export function getPublishedRegion(worldId: string, systemSlug: string, planetSl
           regions: { where: { published: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { slug: true, name: true } },
         },
       },
+      articles: { where: { published: true }, orderBy: { title: "asc" }, select: { slug: true, title: true, category: true, summary: true } },
+      narratives: { where: { published: true }, orderBy: { title: "asc" }, select: { slug: true, title: true, subtitle: true, summary: true } },
     },
   });
 }

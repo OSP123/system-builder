@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import type { z } from "zod";
 import { db } from "./db";
-import { assertCanContribute, assertCanEditRecord, assertMediaInWorld, ContentError, guardSlug, type Actor } from "./content";
+import { assertCanContribute, assertCanEditRecord, assertMediaInWorld, assertRegionInWorld, ContentError, guardSlug, type Actor } from "./content";
 import type { characterSchema, narrativeSchema, unitSchema } from "./validation";
 
 /** Mutations for characters, army list units and narratives, with the same authorship rules as content.ts. */
@@ -94,6 +94,7 @@ export async function deleteUnit(actor: Actor, id: string) {
 async function checkNarrative(worldId: string, d: NarrativeInput) {
   await assertMediaInWorld(d.coverImageId, worldId, "coverImageId");
   await assertPlanetInWorld(d.planetId, worldId, "planetId");
+  await assertRegionInWorld(d.regionId, worldId, d.planetId);
   if (d.characterIds.length) {
     const found = await db.character.count({ where: { id: { in: d.characterIds }, worldId } });
     if (found !== d.characterIds.length) throw new ContentError("A selected character is not in this world", "characterIds");

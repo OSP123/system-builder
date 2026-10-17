@@ -28,6 +28,7 @@ export default async function NarrativePage({ params }: Props) {
   const base = `/w/${world.slug}`;
   const chapters = chapterHeadings(n.body);
   const setting = n.planet?.published && n.planet.system.published ? n.planet : null;
+  const region = setting && n.region?.published && n.region.planetId === n.planetId ? n.region : null;
 
   return (
     <div className="space-y-6">
@@ -79,6 +80,14 @@ export default async function NarrativePage({ params }: Props) {
                 <Link href={`${base}/systems/${setting.system.slug}/${setting.slug}`} className="underline hover:text-[#7a1010]">
                   {setting.name}
                 </Link>
+                {region && (
+                  <>
+                    {" · "}
+                    <Link href={`${base}/systems/${setting.system.slug}/${setting.slug}/${region.slug}`} className="underline hover:text-[#7a1010]">
+                      {region.name}
+                    </Link>
+                  </>
+                )}
               </Sidebar>
             )}
           </div>

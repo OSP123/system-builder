@@ -47,9 +47,22 @@ export default async function ArticlePage({ params }: Props) {
         <p className="mt-5 font-display text-xs uppercase tracking-[0.25em] text-ash">
           <span className="text-blood-bright">Locus ·</span>{" "}
           {article.planet?.published ? (
-            <Link className="text-cerulean-bright hover:text-gold-bright" href={`${base}/systems/${article.planet.system.slug}/${article.planet.slug}`}>
-              {article.planet.name}
-            </Link>
+            <>
+              <Link className="text-cerulean-bright hover:text-gold-bright" href={`${base}/systems/${article.planet.system.slug}/${article.planet.slug}`}>
+                {article.planet.name}
+              </Link>
+              {article.region?.published && (
+                <>
+                  {" · "}
+                  <Link
+                    className="text-cerulean-bright hover:text-gold-bright"
+                    href={`${base}/systems/${article.planet.system.slug}/${article.planet.slug}/${article.region.slug}`}
+                  >
+                    {article.region.name}
+                  </Link>
+                </>
+              )}
+            </>
           ) : (
             <Link className="text-cerulean-bright hover:text-gold-bright" href={`${base}/systems/${article.system!.slug}`}>
               {article.system!.name} System

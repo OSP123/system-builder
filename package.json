@@ -19,7 +19,8 @@
     "db:import-lore": "tsx prisma/import-lore.ts",
     "start:render": "npm run check-env && prisma migrate deploy && npm run db:seed && npm run db:import-lore && npm run db:import-worlds && next start",
     "check-env": "tsx scripts/check-env.ts",
-    "db:import-worlds": "tsx prisma/import-worlds.ts"
+    "db:import-worlds": "tsx prisma/import-worlds.ts",
+    "db:import-slow-grow": "tsx prisma/import-slow-grow.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

@@ -172,7 +172,7 @@ Tasks:
 - New planet regions feature (model, CMS with sector editor and live tactical-map preview, public region pages with auspex map, globe markers in the galaxy planet view with far-side label hiding), generic create-only world importer (src/lib/world-import.ts, npm run db:import-worlds, run on Render boot)
 - Verified: 153 Vitest + 11 Playwright (new regions e2e; phone guard covers region pages); screenshots desktop/phone
 Follow-ups:
-- Theatre artwork by Yaro (iyaro87): add once he agrees, with credit
+- Theatre artwork by Yaro (iyaro87): add once they agree, with credit
 - Players' army lore, battle reports and admin-placed map_locations live in the slow-grow-trainer Supabase database: needs an export and the players' agreement
 - slow-grow-trainer's CampaignTimeline still says "Vesperia Prime"
 - Merge feature/vespera-prime and push to deploy
@@ -185,3 +185,44 @@ Tasks:
 Follow-ups:
 - Confirm credit for the planet texture (the source project credits its environmental imagery to Yaro)
 
+
+Date: 2026-10-16
+Tasks:
+- Slow-grow campaign import (one-time snapshot, per user): exported the slow-grow-trainer Supabase tables readable with the public anon key into data/imports/slow-grow/ (git-ignored). Profiles are not readable anonymously, so commander names, armies and warlords come from a profiles.csv the user exports
+- New: Article.regionId (records linked to a region, CMS select validated to the same world and planet), Article/Character sourceRef + sourceHash (re-runs update only unedited records), Region.control + controlAsOf (control snapshot with bar and shares on the region page), "Chronicled here" list on region pages, region link on record pages
+- src/lib/importers/slow-grow.ts (pure transforms, CSV parser), slow-grow-db.ts (writer), prisma/import-slow-grow.ts (npm run db:import-slow-grow). Players' writing imported as drafts; events and control published; no player ids, emails or real names stored
+- Local import: 48 battle drafts, 3 events (The Veil Thins is planet-wide, no region), control for all 6 theatres; second run changes nothing
+- Verified: 169 Vitest (synthetic fixtures only) + 11 Playwright; phone screenshot of the region page
+Follow-ups:
+- User to export profiles.csv into data/imports/slow-grow/ and re-run the import (battle titles then name the commanders; unnamed same-sector battles currently share a title)
+- Production import: run locally against Render's external DATABASE_URL
+- The local dev server on :3000 needs a restart to load the regenerated Prisma client
+- Merge feature/vespera-prime and push to deploy
+
+
+Date: 2026-10-16
+Tasks:
+- Checked the user's profiles_rows.csv (53 profiles, all 39 battle commanders named); import script now also accepts Supabase's default file name
+- Fixed warlords: slow-grow stopped writing profiles.warlord_name in commit d620624; warlord names live in crucible_datasheets[].name (up to 3 per commander). Each datasheet now imports as a draft character (first = Warlord, rest = Champion) with wargear lines; legacy warlord_name kept as a fallback
+- Per user: stats are 11th edition, presented 3rd edition style. Added an "eleventh" statline kind (M, T, Sv, Inv, W, Ld, OC) to codex.ts, the Statline renderer and the CMS profiles editor; smart quotes in M become '"'
+- Dry run on the CSV: 19 characters (13 warlords, 6 champions), 18 with a statline
+- Verified: 170 Vitest + 11 Playwright, tsc, eslint
+Follow-ups:
+- Only 13 of 53 profiles have Crucible datasheets saved, though the user says everyone picked a warlord; worth checking in slow-grow whether players' datasheets failed to save
+- Weapons are wargear lines; a 3rd-edition-style weapon table with 11th edition stats could follow
+
+
+Date: 2026-10-16
+Tasks:
+- Per user, battle reports belong under Narratives: they now import as draft narratives (title "Sector, Round N"; subtitle "Victory for A over B, x–y VP"; victor's TL;DR as epigraph; each account a ## chapter; deeds; both commanders' warlords featured; setting = planet + theatre). The first import's lore copies are deleted on the next run when unedited
+- Narrative gains regionId (CMS region select, validated like records), sourceRef and sourceHash (migration 20261017000008); region pages list narratives under "Chronicled here"; narrative pages link the region in Setting
+- Verified in a throwaway database: 103 created (48 narratives, 35 featuring a warlord), re-run updates then settles to no changes; phone and desktop screenshots of a battle narrative; 171 Vitest + 11 Playwright
+Follow-ups:
+- User to run npm run db:import-slow-grow locally (moves the 48 lore drafts to narratives)
+
+
+Date: 2026-10-16
+Tasks:
+- Characters gain playedBy (migration 20261017000009), labelled "Commander" in the CMS and omitted from public queries. The slow-grow import fills it with the commander name the database already links to each warlord/champion (per user: not Discord names; discord_name is not read). Filled when missing even on hand-edited characters, never overwritten
+- CMS featured-character picker shows each character's commander and is searchable by name, title or commander (search appears with more than 8 characters)
+- Verified: 172 Vitest + Playwright

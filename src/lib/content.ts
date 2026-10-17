@@ -114,6 +114,15 @@ async function assertArticleLinks(worldId: string, data: ArticleInput) {
     const planet = await db.planet.findFirst({ where: { id: data.planetId, system: { worldId } } });
     if (!planet) throw new ContentError("Planet not found in this world", "planetId");
   }
+  await assertRegionInWorld(data.regionId, worldId, data.planetId);
+}
+
+/** A linked region must be in the world and, if a planet is chosen too, on that planet. */
+export async function assertRegionInWorld(regionId: string | null | undefined, worldId: string, planetId?: string | null) {
+  if (!regionId) return;
+  const region = await db.region.findFirst({ where: { id: regionId, planet: { system: { worldId } } } });
+  if (!region) throw new ContentError("Region not found in this world", "regionId");
+  if (planetId && region.planetId !== planetId) throw new ContentError("That region is on a different planet", "regionId");
 }
 
 export async function createArticle(actor: Actor, worldId: string, data: ArticleInput) {

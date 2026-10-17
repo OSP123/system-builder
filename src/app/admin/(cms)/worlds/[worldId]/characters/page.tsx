@@ -10,7 +10,7 @@ export default async function CharactersAdminPage({ params }: { params: Promise<
   const characters = await db.character.findMany({
     where: { worldId: world.id },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, title: true, status: true, sortOrder: true, published: true, author: authorSelect },
+    select: { id: true, name: true, title: true, playedBy: true, status: true, sortOrder: true, published: true, author: authorSelect },
   });
   const base = `/admin/worlds/${world.id}/characters`;
   return (
@@ -32,7 +32,7 @@ export default async function CharactersAdminPage({ params }: { params: Promise<
                 <td className="hidden sm:table-cell py-3 text-ash">{c.sortOrder}</td>
                 <td className="py-3">
                   <Link href={`${base}/${c.id}`} className="tap text-parchment hover:text-gold-bright">{c.name}</Link>
-                  {c.title && <span className="block text-xs text-ash">{c.title}</span>}
+                  {(c.title || c.playedBy) && <span className="block text-xs text-ash">{[c.title, c.playedBy && `commander: ${c.playedBy}`].filter(Boolean).join(" · ")}</span>}
                 </td>
                 <td className="hidden sm:table-cell text-ash">{STATUS_LABELS[c.status]}</td>
                 <td className="text-xs"><AuthorTag author={c.author} currentUserId={user.id} /></td>

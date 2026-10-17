@@ -1,11 +1,12 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/lib/db";
-import { createPlanet, createRegion, createSystem, createWorld, deletePlanet, deleteRegion, ForbiddenError, updateRegion } from "@/lib/content";
+import { createArticle, createPlanet, createRegion, createSystem, createWorld, deletePlanet, deleteRegion, ForbiddenError, updateRegion } from "@/lib/content";
 import { segmentumAt, sideOfRift } from "@/lib/galaxy/coords";
-import { formatLatLng, latLngToVector, polygonCentre, readSectors, sectorSchema } from "@/lib/regions";
+import { formatLatLng, latLngToVector, polygonCentre, readControl, readSectors, sectorSchema } from "@/lib/regions";
 import { importWorld } from "@/lib/world-import";
 import { VESPERA_PRIME } from "@/lib/worlds/vespera-prime";
-import { planetSchema, regionSchema, systemSchema, worldSchema } from "@/lib/validation";
+import { createNarrative } from "@/lib/codex-content";
+import { articleSchema, narrativeSchema, planetSchema, regionSchema, systemSchema, worldSchema } from "@/lib/validation";
 import { makeUser, resetDb } from "./helpers";
 
 describe("region helpers", () => {
@@ -26,6 +27,11 @@ describe("region helpers", () => {
     expect(latLngToVector(90, 0)[1]).toBeCloseTo(1);
     expect(latLngToVector(0, 90)[0]).toBeCloseTo(1);
     expect(formatLatLng(-25, 135)).toBe("25°S 135°E");
+  });
+
+  it("reads control snapshots, dropping malformed shares", () => {
+    expect(readControl([{ faction: "Imperium", share: 60 }, { faction: "Chaos" }, { share: 10 }, null])).toEqual([{ faction: "Imperium", share: 60 }]);
+    expect(readControl("nope")).toEqual([]);
   });
 
   it("finds a polygon's centre", () => {
@@ -127,5 +133,29 @@ describe("region permissions", () => {
     await expect(deletePlanet(bob, bobsPlanet.id)).rejects.toThrow(/regions other contributors/);
     await deletePlanet(admin, bobsPlanet.id);
     expect(await db.region.count({ where: { planetId: bobsPlanet.id } })).toBe(0);
+  });
+});
+
+describe("records linked to regions", () => {
+  beforeEach(resetDb);
+
+  it("accept a region in the world, on the chosen planet", async () => {
+    const admin = await makeUser("ADMIN");
+    const world = await createWorld(admin, worldSchema.parse({ name: "Linked", published: "on" }));
+    const other = await createWorld(admin, worldSchema.parse({ name: "Elsewhere" }));
+    const sys = await createSystem(admin, world.id, systemSchema.parse({ name: "Sys" }));
+    const a = await createPlanet(admin, sys.id, planetSchema.parse({ name: "A" }));
+    const b = await createPlanet(admin, sys.id, planetSchema.parse({ name: "B" }));
+    const region = await createRegion(admin, a.id, regionSchema.parse({ name: "Front" }));
+
+    const ok = await createArticle(admin, world.id, articleSchema.parse({ category: "BATTLE", title: "Battle", planetId: a.id, regionId: region.id }));
+    expect(ok.regionId).toBe(region.id);
+    await expect(createArticle(admin, world.id, articleSchema.parse({ category: "BATTLE", title: "Wrong planet", planetId: b.id, regionId: region.id }))).rejects.toThrow(/different planet/);
+    await expect(createArticle(admin, other.id, articleSchema.parse({ category: "BATTLE", title: "Wrong world", regionId: region.id }))).rejects.toThrow(/not found in this world/);
+
+    const story = await createNarrative(admin, world.id, narrativeSchema.parse({ title: "Account", planetId: a.id, regionId: region.id }));
+    expect(story.regionId).toBe(region.id);
+    await expect(createNarrative(admin, world.id, narrativeSchema.parse({ title: "Wrong planet", planetId: b.id, regionId: region.id }))).rejects.toThrow(/different planet/);
+    await expect(createNarrative(admin, other.id, narrativeSchema.parse({ title: "Wrong world", regionId: region.id }))).rejects.toThrow(/not found in this world/);
   });
 });

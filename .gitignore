@@ -49,3 +49,6 @@ next-env.d.ts
 /.next-e2e/
 /.test-outbox
 /.next-preview/
+
+# Raw exports from other apps (players' writing, ids); never commit
+/data/imports/

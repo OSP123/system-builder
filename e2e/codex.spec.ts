@@ -26,7 +26,7 @@ test("characters, army list and narratives: build in the CMS, read in rulebook s
   await page.getByLabel("Rank or title").fill("Custodian Captain");
   await page.getByLabel("Faction / allegiance").fill("Adeptus Custodes");
   await page.getByLabel("Quote", { exact: true }).fill("The Emperor's will is my blade.");
-  await page.getByRole("button", { name: "+ Add statline" }).click();
+  await page.getByRole("button", { name: "+ 3rd ed. statline" }).click();
   await page.getByLabel("Profile name").fill("Hesaar");
   await page.getByLabel("Hesaar WS").fill("6");
   await page.getByLabel("Hesaar Sv").fill("2+");

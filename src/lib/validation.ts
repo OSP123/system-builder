@@ -93,6 +93,7 @@ export const articleSchema = z
     coverImageId: optionalId,
     systemId: optionalId,
     planetId: optionalId,
+    regionId: optionalId,
   })
   .transform((d) => withSlug(d, d.title));
 
@@ -240,6 +241,7 @@ export const characterSchema = z
     slug: slugField,
     title: optionalText(120),
     faction: optionalText(120),
+    playedBy: optionalText(80),
     status: z.enum(CHARACTER_STATUSES).default("ACTIVE"),
     quote: optionalText(1000),
     quoteSource: optionalText(200),
@@ -300,6 +302,7 @@ export const narrativeSchema = z
     published: checkbox,
     coverImageId: optionalId,
     planetId: optionalId,
+    regionId: optionalId,
     characterIds: z
       .string()
       .optional()

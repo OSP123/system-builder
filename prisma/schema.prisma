@@ -113,10 +113,18 @@ model Article {
   system       StarSystem?     @relation(fields: [systemId], references: [id], onDelete: SetNull)
   planetId     String?
   planet       Planet?         @relation(fields: [planetId], references: [id], onDelete: SetNull)
+  regionId     String?
+  region       Region?         @relation(fields: [regionId], references: [id], onDelete: SetNull)
+  /// Set on records created by an importer, e.g. "slow-grow:matchup:<id>"; with
+  /// sourceHash (of what the importer last wrote) it lets a re-run update only
+  /// records nobody has edited since.
+  sourceRef    String?
+  sourceHash   String?
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 
   @@unique([worldId, slug])
+  @@unique([worldId, sourceRef])
   @@index([worldId, category])
 }
 
@@ -219,6 +227,8 @@ model Character {
   /// Rank or honorific shown before/under the name, e.g. "Custodian Captain".
   title           String?
   faction         String?
+  /// The commander (player) the character belongs to, e.g. from the slow-grow import. Shown only in the CMS.
+  playedBy        String?
   status          CharacterStatus @default(ACTIVE)
   quote           String?
   quoteSource     String?
@@ -236,11 +246,14 @@ model Character {
   portraitImage   Media?          @relation("CharacterPortrait", fields: [portraitImageId], references: [id], onDelete: SetNull)
   homeworldId     String?
   homeworld       Planet?         @relation("CharacterHomeworld", fields: [homeworldId], references: [id], onDelete: SetNull)
+  sourceRef       String?
+  sourceHash      String?
   narratives      Narrative[]
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
   @@unique([worldId, slug])
+  @@unique([worldId, sourceRef])
   @@index([worldId, sortOrder])
 }
 
@@ -297,11 +310,18 @@ model Narrative {
   coverImage     Media?      @relation("NarrativeCover", fields: [coverImageId], references: [id], onDelete: SetNull)
   planetId       String?
   planet         Planet?     @relation(fields: [planetId], references: [id], onDelete: SetNull)
+  /// A theatre or place on the planet; the narrative is listed on its page.
+  regionId       String?
+  region         Region?     @relation(fields: [regionId], references: [id], onDelete: SetNull)
   characters     Character[]
+  /// Set by importers (e.g. "slow-grow:matchup:<id>"); see src/lib/importers.
+  sourceRef      String?
+  sourceHash     String?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
   @@unique([worldId, slug])
+  @@unique([worldId, sourceRef])
 }
 
 /// One-time "forgot password" link. Only a SHA-256 hash of the token is stored.
@@ -319,27 +339,33 @@ model PasswordResetToken {
 
 /// A named region of a planet, e.g. a theatre of war, placed on its globe.
 model Region {
-  id        String   @id @default(cuid())
-  planetId  String
-  planet    Planet   @relation(fields: [planetId], references: [id], onDelete: Cascade)
-  slug      String
-  name      String
+  id          String      @id @default(cuid())
+  planetId    String
+  planet      Planet      @relation(fields: [planetId], references: [id], onDelete: Cascade)
+  slug        String
+  name        String
   /// What kind of place this is, e.g. "Theatre of war", "Hive city".
-  kind      String?
-  summary   String?  @db.Text
-  terrain   String?
+  kind        String?
+  summary     String?     @db.Text
+  terrain     String?
   /// Position on the planet's globe, in degrees.
-  lat       Float    @default(0)
-  lng       Float    @default(0)
+  lat         Float       @default(0)
+  lng         Float       @default(0)
   /// [{ name, pointsLevel?, shape?, cx?, cy? }]: sub-areas, optionally with an
   /// 800x500 tactical-map polygon ("x,y x,y ...") and label point.
-  sectors   Json     @default("[]")
-  sortOrder Int      @default(0)
-  published Boolean  @default(false)
-  authorId  String?
-  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  sectors     Json        @default("[]")
+  /// Faction control snapshot: [{ faction, share }] (shares sum to 100).
+  control     Json?
+  /// When the control snapshot was taken, e.g. "Round 4 · 1,600 points".
+  controlAsOf String?
+  articles    Article[]
+  narratives  Narrative[]
+  sortOrder   Int         @default(0)
+  published   Boolean     @default(false)
+  authorId    String?
+  author      User?       @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   @@unique([planetId, slug])
 }

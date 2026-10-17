@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { chapterHeadings, readProfiles, readRules } from "@/lib/codex";
 import { createCharacter, createNarrative, createUnit, updateNarrative } from "@/lib/codex-content";
 import { createPlanet, createSystem, createWorld, ForbiddenError } from "@/lib/content";
+import { getPublishedCharacter, getWorldCharacters } from "@/lib/queries";
 import {
   characterSchema,
   narrativeSchema,
@@ -48,6 +49,14 @@ describe("characterSchema", () => {
   it("accepts a single profile", () => {
     const r = characterSchema.parse({ name: "Hesaar", profile: JSON.stringify({ ...marine, name: "Hesaar", ws: "6" }) });
     expect(r.profile).toMatchObject({ name: "Hesaar", ws: "6" });
+  });
+
+  it("accepts an 11th edition statline, with inches only on movement", () => {
+    const eleventh = { kind: "eleventh", name: "Vex", m: '6"', t: "3", sv: "4+", inv: "5+", w: "4", ld: "6+", oc: "1" };
+    expect(characterSchema.parse({ name: "Vex", profile: JSON.stringify(eleventh) }).profile).toEqual(eleventh);
+    expect(() => characterSchema.parse({ name: "Vex", profile: JSON.stringify({ ...eleventh, t: '3"' }) })).toThrow();
+    expect(() => characterSchema.parse({ name: "Vex", profile: JSON.stringify({ ...eleventh, m: "fast" }) })).toThrow();
+    expect(characterSchema.parse({ name: "Vex", profile: JSON.stringify({ ...eleventh, m: "6”" }) }).profile).toMatchObject({ m: '6"' });
   });
 });
 
@@ -99,6 +108,14 @@ describe("codex content", () => {
     const { owner, w } = await setup();
     const u = await createUnit(owner, w.id, unitSchema.parse({ name: "Tactical Squad", profiles: JSON.stringify([marine]) }));
     expect(readProfiles(u.profiles)).toHaveLength(1);
+  });
+
+  it("keeps a character's commander out of public queries", async () => {
+    const { owner, w } = await setup();
+    const c = await createCharacter(owner, w.id, characterSchema.parse({ name: "Vex", playedBy: "Ferrus", published: "on" }));
+    expect(c.playedBy).toBe("Ferrus");
+    expect(await getPublishedCharacter(w.id, c.slug)).not.toHaveProperty("playedBy");
+    expect((await getWorldCharacters(w.id))[0]).not.toHaveProperty("playedBy");
   });
 
   it("rejects a homeworld from another world", async () => {

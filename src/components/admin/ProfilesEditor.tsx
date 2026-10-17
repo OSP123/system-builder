@@ -2,18 +2,19 @@
 
 import { useState } from "react";
 import {
+  emptyEleventhProfile,
   emptyModelProfile,
   emptyVehicleProfile,
-  MODEL_STATS,
+  KIND_LABELS,
   STAT_HEADERS,
-  VEHICLE_STATS,
+  STATS_BY_KIND,
   type StatProfile,
 } from "@/lib/codex";
 
 type Props = {
   name: string;
   initial: StatProfile[];
-  /** Character mode: at most one model profile, posted as a single object (or "" for none). */
+  /** Character mode: at most one model or 11th edition profile, posted as a single object (or "" for none). */
   single?: boolean;
 };
 
@@ -31,14 +32,14 @@ export function ProfilesEditor({ name, initial, single = false }: Props) {
       <input type="hidden" name={name} value={value} />
       {rows.length === 0 && <p className="text-sm text-ash">{single ? "No statline." : "No profiles yet."}</p>}
       {rows.map((r, i) => {
-        const cols = r.kind === "model" ? MODEL_STATS : VEHICLE_STATS;
+        const cols = STATS_BY_KIND[r.kind];
         return (
           <div key={i} className="border border-line bg-black/30 p-3">
             <div className="mb-2 flex items-center gap-3">
-              <span className="font-mono text-[11px] uppercase tracking-widest text-ash">{r.kind === "model" ? "Model" : "Vehicle"}</span>
+              <span className="font-mono text-[11px] uppercase tracking-widest text-ash">{KIND_LABELS[r.kind]}</span>
               <input
                 aria-label="Profile name"
-                placeholder={r.kind === "model" ? "e.g. Sergeant" : "e.g. Rhino"}
+                placeholder={r.kind === "vehicle" ? "e.g. Rhino" : "e.g. Sergeant"}
                 value={r.name}
                 onChange={(e) => update(i, "name", e.target.value)}
                 className="field max-w-xs py-1"
@@ -54,7 +55,7 @@ export function ProfilesEditor({ name, initial, single = false }: Props) {
                   <input
                     aria-label={`${r.name || "Profile"} ${STAT_HEADERS[c]}`}
                     value={(r as Record<string, string>)[c]}
-                    maxLength={5}
+                    maxLength={c === "m" ? 6 : 5}
                     onChange={(e) => update(i, c, e.target.value)}
                     className="field mt-1 px-1 py-1 text-center font-mono text-sm text-parchment"
                   />
@@ -64,11 +65,16 @@ export function ProfilesEditor({ name, initial, single = false }: Props) {
           </div>
         );
       })}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {(!single || rows.length === 0) && (
-          <button type="button" className="btn btn-ghost" onClick={() => setRows((rs) => [...rs, emptyModelProfile()])}>
-            + {single ? "Add statline" : "Model profile"}
-          </button>
+          <>
+            <button type="button" className="btn btn-ghost" onClick={() => setRows((rs) => [...rs, emptyModelProfile()])}>
+              + {single ? "3rd ed. statline" : "Model profile"}
+            </button>
+            <button type="button" className="btn btn-ghost" onClick={() => setRows((rs) => [...rs, emptyEleventhProfile()])}>
+              + {single ? "11th ed. statline" : "11th ed. profile"}
+            </button>
+          </>
         )}
         {!single && (
           <button type="button" className="btn btn-ghost" onClick={() => setRows((rs) => [...rs, emptyVehicleProfile()])}>

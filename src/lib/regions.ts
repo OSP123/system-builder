@@ -58,3 +58,13 @@ export function formatLatLng(lat: number, lng: number): string {
   const ew = `${Math.abs(lng).toFixed(0)}°${lng >= 0 ? "E" : "W"}`;
   return `${ns} ${ew}`;
 }
+
+export type ControlShare = { faction: string; share: number };
+
+/** A stored control snapshot, dropping anything malformed. */
+export function readControl(value: unknown): ControlShare[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (c): c is ControlShare => !!c && typeof c.faction === "string" && typeof c.share === "number" && c.share > 0 && c.share <= 100,
+  );
+}
