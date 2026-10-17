@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import type { z } from "zod";
 import { db } from "./db";
 import { canContribute, canEditRecord, canManageWorld, isAdmin, type Actor } from "./permissions";
+import { pruneRecording } from "./recordings";
 import type { articleSchema, planetSchema, regionSchema, systemSchema, worldSchema } from "./validation";
 
 /**
@@ -125,14 +126,30 @@ export async function assertRegionInWorld(regionId: string | null | undefined, w
   if (planetId && region.planetId !== planetId) throw new ContentError("That region is on a different planet", "regionId");
 }
 
+/**
+ * A narration must be a recording in this world, made by the actor (or any, for
+ * an admin), and not already narrating something else. Keeping the current one is always fine.
+ */
+export async function assertNarration(actor: Actor, worldId: string, narrationId: string | null | undefined, current: string | null = null) {
+  if (!narrationId || narrationId === current) return;
+  const r = await db.recording.findUnique({
+    where: { id: narrationId },
+    select: { worldId: true, uploadedById: true, article: { select: { id: true } }, narrative: { select: { id: true } } },
+  });
+  if (!r || r.worldId !== worldId) throw new ContentError("Recording not found in this world", "narrationId");
+  if (!isAdmin(actor) && r.uploadedById !== actor.id) throw new ContentError("You can only attach recordings you made", "narrationId");
+  if (r.article || r.narrative) throw new ContentError("That recording already narrates another entry", "narrationId");
+}
+
 export async function createArticle(actor: Actor, worldId: string, data: ArticleInput) {
   await assertCanContribute(actor, worldId);
   await assertArticleLinks(worldId, data);
+  await assertNarration(actor, worldId, data.narrationId);
   return guardSlug(() => db.article.create({ data: { ...data, worldId, authorId: actor.id } }));
 }
 
 async function findArticle(id: string) {
-  return db.article.findUnique({ where: { id }, select: { worldId: true, authorId: true } });
+  return db.article.findUnique({ where: { id }, select: { worldId: true, authorId: true, narrationId: true } });
 }
 
 export async function updateArticle(actor: Actor, articleId: string, data: ArticleInput) {
@@ -140,7 +157,10 @@ export async function updateArticle(actor: Actor, articleId: string, data: Artic
   if (!article) throw new ContentError("Article not found");
   assertCanEditRecord(actor, article);
   await assertArticleLinks(article.worldId, data);
-  return guardSlug(() => db.article.update({ where: { id: articleId }, data }));
+  await assertNarration(actor, article.worldId, data.narrationId, article.narrationId);
+  const updated = await guardSlug(() => db.article.update({ where: { id: articleId }, data }));
+  if (article.narrationId !== updated.narrationId) await pruneRecording(article.narrationId);
+  return updated;
 }
 
 export async function deleteArticle(actor: Actor, articleId: string) {
@@ -148,6 +168,7 @@ export async function deleteArticle(actor: Actor, articleId: string) {
   if (!article) return;
   assertCanEditRecord(actor, article);
   await db.article.delete({ where: { id: articleId } });
+  await pruneRecording(article.narrationId);
 }
 
 // ---------- Star systems ----------

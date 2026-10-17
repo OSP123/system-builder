@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Markdown } from "@/components/Markdown";
+import { NarrationPlayer } from "@/components/NarrationPlayer";
 import { MediaImage } from "@/components/MediaImage";
 import { InkSplatter } from "@/components/ornament/InkSplatter";
 import { SkullDivider } from "@/components/ornament/Skull";
@@ -69,6 +70,12 @@ export default async function ArticlePage({ params }: Props) {
             </Link>
           )}
         </p>
+      )}
+
+      {article.narration && (
+        <div className="mt-8">
+          <NarrationPlayer recording={article.narration} label="Hear this record read aloud" />
+        </div>
       )}
 
       <SkullDivider className="mt-8" />

@@ -3,13 +3,15 @@ import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 /**
- * File storage for uploaded images: Supabase Storage when SUPABASE_URL and
+ * File storage for uploaded images and audio recordings: Supabase Storage when SUPABASE_URL and
  * SUPABASE_SECRET_KEY are set (production, where the disk is ephemeral),
  * otherwise local disk under UPLOAD_DIR. Pages always link /media/<key>; that
  * route serves the local file or redirects to the Supabase public URL.
  */
 
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+/** About an hour of speech at the bitrates browsers record at (Supabase's free plan caps files at 50 MB). */
+export const MAX_AUDIO_BYTES = 50 * 1024 * 1024;
 
 export const ALLOWED_IMAGE_TYPES: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -19,7 +21,15 @@ export const ALLOWED_IMAGE_TYPES: Record<string, string> = {
   "image/avif": "avif",
 };
 
-const KEY_PATTERN = /^[a-z0-9]{24}\.(jpg|png|webp|gif|avif)$/;
+export const ALLOWED_AUDIO_TYPES: Record<string, string> = {
+  "audio/webm": "webm",
+  "audio/ogg": "ogg",
+  "audio/mp4": "m4a",
+  "audio/mpeg": "mp3",
+  "audio/wav": "wav",
+};
+
+const KEY_PATTERN = /^[a-z0-9]{24}\.(jpg|png|webp|gif|avif|webm|ogg|m4a|mp3|wav)$/;
 
 export class UploadError extends Error {}
 
@@ -34,15 +44,28 @@ export function supabaseStorage(): Supabase | null {
 
 const authHeaders = (s: Supabase) => ({ apikey: s.key, Authorization: `Bearer ${s.key}` });
 
-/** Create the public bucket if it doesn't exist yet. Safe to call on every boot. */
-export async function ensureBucket(s: Supabase = supabaseStorage()!): Promise<"created" | "exists"> {
+const BUCKET_SETTINGS = {
+  public: true,
+  file_size_limit: MAX_AUDIO_BYTES,
+  allowed_mime_types: [...Object.keys(ALLOWED_IMAGE_TYPES), ...Object.keys(ALLOWED_AUDIO_TYPES)],
+};
+
+/** Create the public bucket, or bring its limits up to date. Safe to call on every boot. */
+export async function ensureBucket(s: Supabase = supabaseStorage()!): Promise<"created" | "updated" | "exists"> {
+  const json = { ...authHeaders(s), "Content-Type": "application/json" };
   const found = await fetch(`${s.url}/storage/v1/bucket/${s.bucket}`, { headers: authHeaders(s) });
-  if (found.ok) return "exists";
-  const res = await fetch(`${s.url}/storage/v1/bucket`, {
-    method: "POST",
-    headers: { ...authHeaders(s), "Content-Type": "application/json" },
-    body: JSON.stringify({ id: s.bucket, name: s.bucket, public: true, file_size_limit: MAX_UPLOAD_BYTES, allowed_mime_types: Object.keys(ALLOWED_IMAGE_TYPES) }),
-  });
+  if (found.ok) {
+    const current = (await found.json().catch(() => ({}))) as { public?: boolean; file_size_limit?: number | null; allowed_mime_types?: string[] | null };
+    const same =
+      current.public === true &&
+      current.file_size_limit === BUCKET_SETTINGS.file_size_limit &&
+      [...(current.allowed_mime_types ?? [])].sort().join() === [...BUCKET_SETTINGS.allowed_mime_types].sort().join();
+    if (same) return "exists";
+    const res = await fetch(`${s.url}/storage/v1/bucket/${s.bucket}`, { method: "PUT", headers: json, body: JSON.stringify({ id: s.bucket, ...BUCKET_SETTINGS }) });
+    if (!res.ok) throw new Error(`Could not update storage bucket "${s.bucket}": ${res.status} ${await res.text()}`);
+    return "updated";
+  }
+  const res = await fetch(`${s.url}/storage/v1/bucket`, { method: "POST", headers: json, body: JSON.stringify({ id: s.bucket, name: s.bucket, ...BUCKET_SETTINGS }) });
   if (!res.ok) throw new Error(`Could not create storage bucket "${s.bucket}": ${res.status} ${await res.text()}`);
   return "created";
 }
@@ -63,13 +86,24 @@ export function sniffImageType(buf: Uint8Array): string | null {
   return null;
 }
 
+/** The same check for audio: WebM/Opus (Chrome, Firefox), MP4/AAC (Safari), Ogg, MP3 and WAV. */
+export function sniffAudioType(b: Uint8Array): string | null {
+  const text = (from: number, to: number) => String.fromCharCode(...b.slice(from, to));
+  if (b.length >= 4 && b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3) return "audio/webm";
+  if (b.length >= 4 && text(0, 4) === "OggS") return "audio/ogg";
+  if (b.length >= 12 && text(4, 8) === "ftyp" && !/^(avi|hei|mif)/.test(text(8, 11))) return "audio/mp4";
+  if (b.length >= 12 && text(0, 4) === "RIFF" && text(8, 12) === "WAVE") return "audio/wav";
+  if (b.length >= 3 && (text(0, 3) === "ID3" || (b[0] === 0xff && (b[1] & 0xe0) === 0xe0))) return "audio/mpeg";
+  return null;
+}
+
 export function isValidKey(key: string): boolean {
   return KEY_PATTERN.test(key);
 }
 
 export function mimeForKey(key: string): string {
   const ext = key.split(".").pop();
-  const entry = Object.entries(ALLOWED_IMAGE_TYPES).find(([, e]) => e === ext);
+  const entry = Object.entries({ ...ALLOWED_IMAGE_TYPES, ...ALLOWED_AUDIO_TYPES }).find(([, e]) => e === ext);
   return entry ? entry[0] : "application/octet-stream";
 }
 
@@ -79,7 +113,19 @@ export async function saveImage(data: Uint8Array): Promise<{ key: string; mimeTy
   const mimeType = sniffImageType(data);
   if (!mimeType) throw new UploadError("Only JPEG, PNG, WebP, GIF and AVIF images are allowed");
 
-  const key = `${randomBytes(12).toString("hex")}.${ALLOWED_IMAGE_TYPES[mimeType]}`;
+  return store(data, mimeType, ALLOWED_IMAGE_TYPES[mimeType]);
+}
+
+export async function saveAudio(data: Uint8Array): Promise<{ key: string; mimeType: string; size: number }> {
+  if (data.byteLength === 0) throw new UploadError("The recording is empty");
+  if (data.byteLength > MAX_AUDIO_BYTES) throw new UploadError("The recording is larger than 50 MB");
+  const mimeType = sniffAudioType(data);
+  if (!mimeType) throw new UploadError("Only WebM, MP4/M4A, Ogg, MP3 and WAV audio is allowed");
+  return store(data, mimeType, ALLOWED_AUDIO_TYPES[mimeType]);
+}
+
+async function store(data: Uint8Array, mimeType: string, ext: string) {
+  const key = `${randomBytes(12).toString("hex")}.${ext}`;
   const remote = supabaseStorage();
   if (remote) {
     const res = await fetch(`${remote.url}/storage/v1/object/${remote.bucket}/${key}`, {
@@ -87,7 +133,7 @@ export async function saveImage(data: Uint8Array): Promise<{ key: string; mimeTy
       headers: { ...authHeaders(remote), "Content-Type": mimeType, "Cache-Control": "max-age=31536000", "x-upsert": "false" },
       body: new Blob([data as Uint8Array<ArrayBuffer>], { type: mimeType }),
     });
-    if (!res.ok) throw new UploadError(`Image storage refused the upload (${res.status})`);
+    if (!res.ok) throw new UploadError(`File storage refused the upload (${res.status})`);
   } else {
     await mkdir(uploadDir(), { recursive: true });
     await writeFile(path.join(uploadDir(), key), data);
@@ -95,7 +141,7 @@ export async function saveImage(data: Uint8Array): Promise<{ key: string; mimeTy
   return { key, mimeType, size: data.byteLength };
 }
 
-/** Where a stored image lives in Supabase Storage, or null when stored locally. */
+/** Where a stored file lives in Supabase Storage, or null when stored locally. */
 export function remoteImageUrl(key: string): string | null {
   const remote = supabaseStorage();
   return remote && isValidKey(key) ? `${remote.url}/storage/v1/object/public/${remote.bucket}/${key}` : null;

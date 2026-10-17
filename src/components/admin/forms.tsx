@@ -3,6 +3,7 @@ import type { ActionState } from "@/app/admin/actions";
 import { CATEGORIES, CATEGORY_LABELS } from "@/lib/categories";
 import { ActionForm, Field, PublishedToggle, SubmitButton } from "./ActionForm";
 import { ImagePicker } from "./ImagePicker";
+import { NarrationField, type Narration } from "./NarrationField";
 import { MarkdownEditor } from "./MarkdownEditor";
 import { ThemeEditor } from "./ThemeEditor";
 import { CoordinateFields } from "./CoordinateFields";
@@ -48,13 +49,17 @@ export function WorldForm({ action, world }: { action: Action; world?: World }) 
   );
 }
 
+const NARRATION_HINT = "A spoken reading, recorded here or uploaded. Listeners get a player on the public page.";
+
 export function ArticleForm({
   action,
   article,
+  narration,
   systems,
 }: {
   action: Action;
   article?: Article;
+  narration?: Narration | null;
   systems: (Pick<StarSystem, "id" | "name"> & { planets: (Pick<Planet, "id" | "name"> & { regions?: Pick<Region, "id" | "name">[] })[] })[];
 }) {
   return (
@@ -111,6 +116,9 @@ export function ArticleForm({
         </Field>
       </div>
       <RegionSelect planets={systems.flatMap((s) => s.planets)} value={article?.regionId} what="record" />
+      <Field name="narrationId" label="Narration (optional)" hint={NARRATION_HINT}>
+        <NarrationField name="narrationId" initial={narration} />
+      </Field>
       <PublishedToggle defaultChecked={article?.published} />
       <SubmitButton>{article ? "Save record" : "Create record"}</SubmitButton>
     </ActionForm>
@@ -371,11 +379,13 @@ export function UnitForm({ action, unit }: { action: Action; unit?: Unit }) {
 export function NarrativeForm({
   action,
   narrative,
+  narration,
   planets,
   characters,
 }: {
   action: Action;
   narrative?: Narrative & { characters: { id: string }[] };
+  narration?: Narration | null;
   planets: PlanetGroups;
   characters: { id: string; name: string; title: string | null; playedBy: string | null }[];
 }) {
@@ -408,6 +418,9 @@ export function NarrativeForm({
       </Field>
       <Field name="body" label="Story (Markdown)" hint="Use ## for chapter headings; they become the table of contents.">
         <MarkdownEditor name="body" defaultValue={narrative?.body} rows={24} />
+      </Field>
+      <Field name="narrationId" label="Narration (optional)" hint={NARRATION_HINT}>
+        <NarrationField name="narrationId" initial={narration} />
       </Field>
       <Field name="characterIds" label="Featured characters">
         <CharacterPicker name="characterIds" options={characters} initial={narrative?.characters.map((c) => c.id) ?? []} />

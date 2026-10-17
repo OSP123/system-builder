@@ -1,20 +1,13 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
-import { isSessionStale } from "@/lib/session";
 import { assertCanContribute, ContentError, ForbiddenError } from "@/lib/content";
 import { db } from "@/lib/db";
+import { currentUser } from "@/lib/request-user";
 import { MAX_UPLOAD_BYTES, publicUrl, saveImage, UploadError } from "@/lib/storage";
 
 /** Upload one image into a world's media library. multipart/form-data: file, worldId, alt? */
 export async function POST(req: Request) {
-  const session = await getSession();
-  // Re-read the user: the cookie's role may be stale, and the account may be disabled.
-  const user = session
-    ? await db.user.findUnique({ where: { id: session.userId }, select: { id: true, role: true, disabled: true, passwordChangedAt: true } })
-    : null;
-  if (!session || !user || user.disabled || isSessionStale(session.issuedAt, user.passwordChangedAt)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const user = await currentUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");

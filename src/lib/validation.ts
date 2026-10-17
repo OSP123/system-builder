@@ -94,6 +94,7 @@ export const articleSchema = z
     systemId: optionalId,
     planetId: optionalId,
     regionId: optionalId,
+    narrationId: optionalId,
   })
   .transform((d) => withSlug(d, d.title));
 
@@ -301,6 +302,7 @@ export const narrativeSchema = z
     body: z.string().max(500000).default(""),
     published: checkbox,
     coverImageId: optionalId,
+    narrationId: optionalId,
     planetId: optionalId,
     regionId: optionalId,
     characterIds: z

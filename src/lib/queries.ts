@@ -34,6 +34,7 @@ export function getPublishedArticle(worldId: string, slug: string) {
       system: { select: { slug: true, name: true, published: true } },
       planet: { select: { slug: true, name: true, published: true, system: { select: { slug: true } } } },
       region: { select: { slug: true, name: true, published: true } },
+      narration: { select: { id: true, key: true, durationSec: true } },
     },
   });
 }
@@ -122,6 +123,7 @@ export function getPublishedNarrative(worldId: string, slug: string) {
       coverImage: true,
       planet: { select: { slug: true, name: true, published: true, system: { select: { slug: true, published: true } } } },
       region: { select: { slug: true, name: true, published: true, planetId: true } },
+      narration: { select: { id: true, key: true, durationSec: true } },
       characters: {
         where: { published: true },
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],

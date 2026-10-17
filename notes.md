@@ -239,3 +239,13 @@ Follow-ups:
 - User sets Render env: DATABASE_URL (Supabase session pooler), SUPABASE_URL, SUPABASE_SECRET_KEY; removes UPLOADS_EPHEMERAL. Then run the slow-grow import against Supabase
 - Delete the Render database once the live site is confirmed on Supabase (also retires its exposed password); remove RENDER_DATABASE_URL and SUPABASE_PROD_* from .env afterwards
 - Supabase free projects pause after a week idle; upgrade to Pro when people rely on the site
+
+
+Date: 2026-10-17
+Tasks:
+- Narrations (per user: record voice in the admin so people can listen to narratives and lore). New Recording model; Article.narrationId and Narrative.narrationId (migration 20261017000011, RLS on). CMS NarrationField: record with MediaRecorder (MP4/AAC preferred, else WebM/Opus with duration fixed by fix-webm-duration 1.0.6), pause/resume, level meter, review, keep/discard, or upload a file. POST /api/admin/recordings (50 MB, byte-sniffed). Public "Hear it read aloud" player on lore and narrative pages
+- Cleanup: replaced/removed/deleted narrations delete their recording and file; unattached takes pruned after a day; contributors attach only their own recordings. /media serves byte ranges locally; Supabase bucket limits are updated on boot (50 MB, audio types); middleware body limit raised to 52 MB
+- Shared API auth check (src/lib/request-user.ts) for the media and recording uploads
+- Verified: 186 Vitest; 12 Playwright including recording with Chromium's fake microphone and checking the public player's duration; phone and desktop screenshots
+Follow-ups:
+- Optional: a "narrated" mark in lore and narrative listings

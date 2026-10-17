@@ -61,6 +61,7 @@ model User {
   resetTokens       PasswordResetToken[]
   worlds            World[]
   media             Media[]
+  recordings        Recording[]
   articles          Article[]
   systems           StarSystem[]
   planets           Planet[]
@@ -89,6 +90,7 @@ model World {
   units        Unit[]
   narratives   Narrative[]
   media        Media[]      @relation("WorldMedia")
+  recordings   Recording[]
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 }
@@ -109,6 +111,9 @@ model Article {
   published    Boolean         @default(false)
   coverImageId String?
   coverImage   Media?          @relation("ArticleCover", fields: [coverImageId], references: [id], onDelete: SetNull)
+  /// A spoken reading of the record (see Recording).
+  narrationId  String?         @unique
+  narration    Recording?      @relation("ArticleNarration", fields: [narrationId], references: [id], onDelete: SetNull)
   systemId     String?
   system       StarSystem?     @relation(fields: [systemId], references: [id], onDelete: SetNull)
   planetId     String?
@@ -189,6 +194,24 @@ model Planet {
   updatedAt      DateTime    @updatedAt
 
   @@unique([systemId, slug])
+}
+
+/// An audio recording (a narration of a record or narrative), recorded in the
+/// CMS or uploaded. Stored like images: Supabase Storage or UPLOAD_DIR.
+model Recording {
+  id           String     @id @default(cuid())
+  worldId      String
+  world        World      @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  key          String     @unique
+  mimeType     String
+  size         Int
+  /// Length in seconds, as measured by the browser; null if unknown.
+  durationSec  Int?
+  uploadedById String
+  uploadedBy   User       @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime   @default(now())
+  article      Article?   @relation("ArticleNarration")
+  narrative    Narrative? @relation("NarrativeNarration")
 }
 
 model Media {
@@ -308,6 +331,9 @@ model Narrative {
   published      Boolean     @default(false)
   coverImageId   String?
   coverImage     Media?      @relation("NarrativeCover", fields: [coverImageId], references: [id], onDelete: SetNull)
+  /// A spoken reading of the narrative (see Recording).
+  narrationId    String?     @unique
+  narration      Recording?  @relation("NarrativeNarration", fields: [narrationId], references: [id], onDelete: SetNull)
   planetId       String?
   planet         Planet?     @relation(fields: [planetId], references: [id], onDelete: SetNull)
   /// A theatre or place on the planet; the narrative is listed on its page.

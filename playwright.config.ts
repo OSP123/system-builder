@@ -10,8 +10,17 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     screenshot: "only-on-failure",
-    // Software WebGL so the 3D galaxy map renders in headless Chromium.
-    launchOptions: { args: ["--enable-unsafe-swiftshader", "--use-angle=swiftshader", "--ignore-gpu-blocklist"] },
+    // Software WebGL so the 3D galaxy map renders in headless Chromium, and a
+    // fake microphone (a test tone) for recording narrations.
+    launchOptions: {
+      args: [
+        "--enable-unsafe-swiftshader",
+        "--use-angle=swiftshader",
+        "--ignore-gpu-blocklist",
+        "--use-fake-device-for-media-stream",
+        "--use-fake-ui-for-media-stream",
+      ],
+    },
   },
   webServer: {
     // Runs the production build against the test database.

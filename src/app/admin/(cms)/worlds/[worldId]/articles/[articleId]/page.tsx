@@ -4,6 +4,7 @@ import { DeleteButton } from "@/components/admin/DeleteButton";
 import { ArticleForm } from "@/components/admin/forms";
 import { ReadOnlyRecord } from "@/components/admin/Authorship";
 import { db } from "@/lib/db";
+import { narrationFor, narrationSelect } from "@/lib/narration";
 import { canEditRecord } from "@/lib/permissions";
 import { deleteArticle, updateArticle } from "../../../../../actions";
 import { authorSelect, loadCmsWorld } from "../../../../data";
@@ -12,7 +13,7 @@ import { systemsForSelect } from "../systemsForSelect";
 export default async function EditArticlePage({ params }: { params: Promise<{ worldId: string; articleId: string }> }) {
   const p = await params;
   const { user, world } = await loadCmsWorld(p.worldId);
-  const article = await db.article.findFirst({ where: { id: p.articleId, worldId: world.id }, include: { author: authorSelect } });
+  const article = await db.article.findFirst({ where: { id: p.articleId, worldId: world.id }, include: { author: authorSelect, narration: narrationSelect } });
   if (!article) notFound();
   if (!canEditRecord(user, article)) {
     return (
@@ -35,7 +36,7 @@ export default async function EditArticlePage({ params }: { params: Promise<{ wo
           <Link href={`/w/${world.slug}/lore/${article.slug}`} target="_blank" className="tap ml-auto text-sm text-cerulean-bright hover:underline">View ↗</Link>
         )}
       </div>
-      <ArticleForm action={updateArticle.bind(null, article.id)} article={article} systems={await systemsForSelect(world.id)} />
+      <ArticleForm action={updateArticle.bind(null, article.id)} article={article} narration={narrationFor(article.narration)} systems={await systemsForSelect(world.id)} />
       <div className="mt-12 border-t border-line pt-6">
         <DeleteButton action={deleteArticle.bind(null, world.id, article.id)} label="Delete record" confirmText={`Delete "${article.title}"?`} />
       </div>

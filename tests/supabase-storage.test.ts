@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/media/[key]/route";
-import { deleteImage, ensureBucket, remoteImageUrl, saveImage, supabaseStorage } from "@/lib/storage";
+import { ALLOWED_AUDIO_TYPES, ALLOWED_IMAGE_TYPES, deleteImage, ensureBucket, MAX_AUDIO_BYTES, remoteImageUrl, saveImage, supabaseStorage } from "@/lib/storage";
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
 const KEY = "0123456789abcdef01234567.png";
@@ -59,8 +59,17 @@ describe("Supabase Storage", () => {
     expect(calls[0].init).toMatchObject({ method: "DELETE", body: JSON.stringify({ prefixes: [KEY] }) });
   });
 
-  it("creates the public bucket only when missing", async () => {
+  it("creates the public bucket when missing and keeps its limits current", async () => {
+    const settings = { public: true, file_size_limit: MAX_AUDIO_BYTES, allowed_mime_types: [...Object.keys(ALLOWED_AUDIO_TYPES), ...Object.keys(ALLOWED_IMAGE_TYPES)] };
+    respond = () => Response.json(settings);
     expect(await ensureBucket()).toBe("exists");
+
+    // A bucket from before audio: images only, 10 MB.
+    respond = (url, init) => (init?.method === "PUT" ? Response.json({}) : Response.json({ ...settings, file_size_limit: 10 * 1024 * 1024, allowed_mime_types: ["image/png"] }));
+    expect(await ensureBucket()).toBe("updated");
+    expect(calls.at(-1)!.init).toMatchObject({ method: "PUT" });
+    expect(JSON.parse(String(calls.at(-1)!.init!.body))).toMatchObject({ file_size_limit: MAX_AUDIO_BYTES, allowed_mime_types: expect.arrayContaining(["audio/webm", "image/png"]) });
+
     respond = (url) => new Response("", { status: url.endsWith("/bucket/media") ? 404 : 200 });
     expect(await ensureBucket()).toBe("created");
     expect(JSON.parse(String(calls.at(-1)!.init!.body))).toMatchObject({ id: "media", public: true });

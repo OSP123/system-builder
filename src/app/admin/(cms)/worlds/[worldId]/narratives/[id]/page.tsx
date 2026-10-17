@@ -4,6 +4,7 @@ import { DeleteButton } from "@/components/admin/DeleteButton";
 import { NarrativeForm } from "@/components/admin/forms";
 import { ReadOnlyRecord } from "@/components/admin/Authorship";
 import { db } from "@/lib/db";
+import { narrationFor, narrationSelect } from "@/lib/narration";
 import { canEditRecord } from "@/lib/permissions";
 import { deleteNarrative, updateNarrative } from "../../../../../actions";
 import { authorSelect, loadCmsWorld } from "../../../../data";
@@ -15,7 +16,7 @@ export default async function EditNarrativePage({ params }: { params: Promise<{ 
   const { user, world } = await loadCmsWorld(p.worldId);
   const narrative = await db.narrative.findFirst({
     where: { id: p.id, worldId: world.id },
-    include: { characters: { select: { id: true } }, author: authorSelect },
+    include: { characters: { select: { id: true } }, author: authorSelect, narration: narrationSelect },
   });
   if (!narrative) notFound();
   if (!canEditRecord(user, narrative)) {
@@ -41,6 +42,7 @@ export default async function EditNarrativePage({ params }: { params: Promise<{ 
       <NarrativeForm
         action={updateNarrative.bind(null, narrative.id)}
         narrative={narrative}
+        narration={narrationFor(narrative.narration)}
         planets={await systemsForSelect(world.id)}
         characters={await characterOptions(world.id)}
       />

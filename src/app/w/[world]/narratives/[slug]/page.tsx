@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Markdown } from "@/components/Markdown";
 import { MediaImage } from "@/components/MediaImage";
+import { NarrationPlayer } from "@/components/NarrationPlayer";
 import { Banner, RulebookPage, RulebookQuote, Sidebar } from "@/components/rulebook/RulebookPage";
 import { chapterHeadings } from "@/lib/codex";
 import { getPublishedNarrative } from "@/lib/queries";
@@ -40,6 +41,11 @@ export default async function NarrativePage({ params }: Props) {
         {n.epigraph && (
           <div className="mt-8">
             <RulebookQuote text={n.epigraph} source={n.epigraphSource} />
+          </div>
+        )}
+        {n.narration && (
+          <div className="mx-auto mt-8 max-w-[68ch]">
+            <NarrationPlayer recording={n.narration} variant="rulebook" label="Hear this account read aloud" />
           </div>
         )}
 

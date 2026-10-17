@@ -64,6 +64,10 @@ Three codex-style sections, presented like the 3rd edition rulebook: printed pag
 
 Each section has its own tab in the CMS. Shapes and parsing live in `src/lib/codex.ts`; mutations live in `src/lib/codex-content.ts`.
 
+## Narrations
+
+Lore records and narratives can carry a spoken **narration**. In the CMS form, record one with the microphone (pause and resume, a level meter, listen back, then keep the take or discard it) or upload an audio file; the public page then shows a "Hear it read aloud" player. Recording needs https (or localhost) and a current browser; MP4/AAC is preferred where the browser can record it, otherwise WebM/Opus, whose missing duration is written in before upload so players can seek. Files are checked by their bytes (WebM, MP4/M4A, Ogg, MP3, WAV), up to 50 MB (about an hour), and stored like images (Supabase Storage in production). A take is stored when you keep it and attached when you save; a replaced, removed or deleted narration's file is deleted, and takes never saved onto anything are cleared after a day. Contributors can attach only their own recordings.
+
 ## Galaxy map
 
 `/galaxy` is a 3D map of the Milky Way in the 41st millennium, shared by every published world (filter by world, colour-coded). Three levels:

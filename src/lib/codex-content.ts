@@ -1,7 +1,17 @@
 import { Prisma } from "@prisma/client";
 import type { z } from "zod";
 import { db } from "./db";
-import { assertCanContribute, assertCanEditRecord, assertMediaInWorld, assertRegionInWorld, ContentError, guardSlug, type Actor } from "./content";
+import {
+  assertCanContribute,
+  assertCanEditRecord,
+  assertMediaInWorld,
+  assertNarration,
+  assertRegionInWorld,
+  ContentError,
+  guardSlug,
+  type Actor,
+} from "./content";
+import { pruneRecording } from "./recordings";
 import type { characterSchema, narrativeSchema, unitSchema } from "./validation";
 
 /** Mutations for characters, army list units and narratives, with the same authorship rules as content.ts. */
@@ -109,6 +119,7 @@ function narrativeData(d: NarrativeInput) {
 export async function createNarrative(actor: Actor, worldId: string, d: NarrativeInput) {
   await assertCanContribute(actor, worldId);
   await checkNarrative(worldId, d);
+  await assertNarration(actor, worldId, d.narrationId);
   const { rest, characters } = narrativeData(d);
   return guardSlug(() =>
     db.narrative.create({ data: { ...rest, worldId, authorId: actor.id, characters: { connect: characters } } }),
@@ -121,13 +132,18 @@ export async function updateNarrative(actor: Actor, id: string, d: NarrativeInpu
   assertCanEditRecord(actor, rec);
   const worldId = rec.worldId;
   await checkNarrative(worldId, d);
+  const before = await db.narrative.findUniqueOrThrow({ where: { id }, select: { narrationId: true } });
+  await assertNarration(actor, worldId, d.narrationId, before.narrationId);
   const { rest, characters } = narrativeData(d);
-  return guardSlug(() => db.narrative.update({ where: { id }, data: { ...rest, characters: { set: characters } } }));
+  const updated = await guardSlug(() => db.narrative.update({ where: { id }, data: { ...rest, characters: { set: characters } } }));
+  if (before.narrationId !== updated.narrationId) await pruneRecording(before.narrationId);
+  return updated;
 }
 
 export async function deleteNarrative(actor: Actor, id: string) {
   const rec = await recordOf("narrative", id);
   if (!rec) return;
   assertCanEditRecord(actor, rec);
-  await db.narrative.delete({ where: { id } });
+  const deleted = await db.narrative.delete({ where: { id }, select: { narrationId: true } });
+  await pruneRecording(deleted.narrationId);
 }
