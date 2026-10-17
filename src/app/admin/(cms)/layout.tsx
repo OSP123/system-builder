@@ -3,6 +3,7 @@ import { Emblem } from "@/components/ornament/Emblem";
 import { requireUser } from "@/lib/auth";
 import { logout } from "../actions";
 import { SITE } from "@/lib/site";
+import { supabaseStorage } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,7 @@ export default async function CmsLayout({ children }: { children: React.ReactNod
         </div>
         <div className="ink-rule" />
       </header>
-      {process.env.UPLOADS_EPHEMERAL === "true" && (
+      {process.env.UPLOADS_EPHEMERAL === "true" && !supabaseStorage() && (
         <p role="note" className="border-b border-blood bg-blood/30 px-4 py-2 text-center text-sm text-parchment">
           Image uploads are temporary on this host and will be lost on the next deploy or restart. Text content is safe.
         </p>

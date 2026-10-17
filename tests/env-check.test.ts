@@ -10,6 +10,8 @@ const good = {
   RESEND_API_KEY: "re_abc",
   EMAIL_FROM: "Archivum <no-reply@example.com>",
   RENDER_EXTERNAL_URL: "https://system-builder.onrender.com",
+  SUPABASE_URL: "https://abc.supabase.co",
+  SUPABASE_SECRET_KEY: "sb_secret_abc",
 };
 
 describe("checkEnv", () => {
@@ -71,5 +73,21 @@ describe("formatReport", () => {
     expect(text.split("\n")[0]).toMatch(/CONFIGURATION CHECK FAILED/);
     expect(text).toContain("✗ AUTH_SECRET is missing.");
     expect(text).toContain("! RESEND_API_KEY is not set.");
+  });
+
+  it("catches Supabase connection and key mix-ups", () => {
+    const base = { ...good };
+    const pooled = "postgresql://postgres.abc:pw@aws-0-us-west-1.pooler.supabase.com";
+    expect(checkEnv({ ...base, DATABASE_URL: `${pooled}:6543/postgres` }).errors.join()).toMatch(/pgbouncer=true/);
+    expect(checkEnv({ ...base, DATABASE_URL: `${pooled}:6543/postgres?pgbouncer=true` }).errors).toEqual([]);
+    expect(checkEnv({ ...base, DATABASE_URL: `${pooled}:5432/postgres` }).errors).toEqual([]);
+    expect(checkEnv({ ...base, DATABASE_URL: "postgresql://postgres:pw@db.abc.supabase.co:5432/postgres" }).warnings.join()).toMatch(/IPv6/);
+
+    const report = checkEnv({ ...base, SUPABASE_URL: "https://abc.supabase.co", SUPABASE_SECRET_KEY: "sb_publishable_xyz" });
+    expect(report.errors.join()).toMatch(/publishable key/);
+    expect(report.errors.join()).not.toContain("sb_publishable_xyz");
+    expect(checkEnv({ ...base, SUPABASE_URL: undefined, SUPABASE_SECRET_KEY: "sb_secret_xyz" }).errors.join()).toMatch(/SUPABASE_URL is not/);
+    expect(checkEnv({ ...base, SUPABASE_SECRET_KEY: undefined }, "22.11.0").warnings.join()).toMatch(/wipes on every deploy/);
+    expect(checkEnv({ ...base, SUPABASE_URL: "https://abc.supabase.co/", SUPABASE_SECRET_KEY: "sb_secret_xyz" }).errors).toEqual([]);
   });
 });

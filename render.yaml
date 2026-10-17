@@ -1,13 +1,9 @@
 # Render Blueprint: https://render.com/docs/blueprint-spec
 #
-# FREE TIER configuration. Limits to know about:
-#   - No persistent disk: uploaded images are lost on every deploy/restart.
-#     The CMS shows a warning while UPLOADS_EPHEMERAL=true.
-#   - Free Postgres expires 30 days after creation.
-#   - The web service sleeps after 15 idle minutes (slow first request).
-# To upgrade: set plan to starter, add the disk block below, set
-# UPLOAD_DIR=/var/data/uploads, remove UPLOADS_EPHEMERAL, and set the
-# database plan to basic-256mb.
+# The web service runs on Render; the database and uploaded images live in
+# Supabase (Postgres + Storage), so nothing depends on Render's disk or its
+# expiring free database. See README "Hosting" for the Supabase settings.
+# Free web services sleep after 15 idle minutes (slow first request).
 services:
   - type: web
     name: cerulean
@@ -22,10 +18,15 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "22"
+      # Supabase: Connect → Session pooler (port 5432), with the database password.
       - key: DATABASE_URL
-        fromDatabase:
-          name: cerulean-db
-          property: connectionString
+        sync: false
+      # Supabase: Project Settings → API Keys. Uploads go to the public "media"
+      # bucket, created on boot if missing.
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
       - key: AUTH_SECRET
         generateValue: true
       - key: ADMIN_EMAIL
@@ -41,19 +42,3 @@ services:
         sync: false
       - key: EMAIL_FROM
         sync: false
-      - key: UPLOAD_DIR
-        value: ./uploads
-      - key: UPLOADS_EPHEMERAL
-        value: "true"
-    # Paid plans only:
-    # disk:
-    #   name: uploads
-    #   mountPath: /var/data
-    #   sizeGB: 1
-
-databases:
-  - name: cerulean-db
-    plan: free
-    region: oregon
-    databaseName: cerulean
-    user: cerulean

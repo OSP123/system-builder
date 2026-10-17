@@ -37,23 +37,20 @@ Put your symbol at `public/emblem.svg` (or `.png`, `.webp`, `.jpg`, `.avif`). It
 
 ## Deploying to Render
 
-`render.yaml` is a Render Blueprint for the **free tier**: a Node web service plus a free Postgres database.
+The site runs as a Render web service. Its database and uploaded images live in **Supabase** (Postgres plus Storage), so nothing depends on Render's expiring free database or its wiped-on-deploy disk.
 
-1. Push this repo to GitHub.
-2. In Render: **New → Blueprint**, pick the repo, and enter `ADMIN_EMAIL` and `ADMIN_PASSWORD` when prompted. `AUTH_SECRET` is generated for you.
-3. On every boot the service runs migrations, the admin seed (which creates the admin account if it's missing but never changes an existing password unless `ADMIN_RESET_PASSWORD=true`) and the lore import, then starts. Render health-checks `/api/health`.
-4. For password-reset emails, set `RESEND_API_KEY` and `EMAIL_FROM` in the Render dashboard.
+1. Create a Supabase project. You need:
+   - `DATABASE_URL`: **Connect → Session pooler** (port 5432, IPv4), with the database password. Don't use the direct connection (IPv6-only, which Render can't reach) or the transaction pooler (port 6543; it needs `?pgbouncer=true` for Prisma).
+   - `SUPABASE_URL` (`https://<project>.supabase.co`) and `SUPABASE_SECRET_KEY` (**Project Settings → API Keys → Secret keys**, `sb_secret_…`; not the publishable key). The app doesn't use the publishable key.
+2. In Render, create the web service from this repo (or **New → Blueprint** with `render.yaml`) and set those three plus `ADMIN_EMAIL`, `ADMIN_PASSWORD` and `AUTH_SECRET` (`openssl rand -base64 32`; a Blueprint generates it). The start command is `npm run start:render`.
+3. On every boot the service runs migrations, creates the public `media` storage bucket if it's missing (`npm run storage:setup`), runs the admin seed (which creates the admin account if it's missing but never changes an existing password unless `ADMIN_RESET_PASSWORD=true`) and the lore and world imports, then starts. Render health-checks `/api/health`.
+4. For password-reset emails, set `RESEND_API_KEY` and `EMAIL_FROM`.
 
-Before anything else, the start command runs a configuration check (`npm run check-env`). It stops the boot with a readable list if a required setting is missing or malformed (`DATABASE_URL`, `AUTH_SECRET` of 32+ characters, `ADMIN_EMAIL`), and logs warnings for optional ones (Resend, `APP_URL`). Render keeps the previous version running when a boot fails.
+Before anything else, the start command runs a configuration check (`npm run check-env`). It stops the boot with a readable list if a required setting is missing or malformed (`DATABASE_URL`, `AUTH_SECRET` of 32+ characters, `ADMIN_EMAIL`, a publishable key in place of the secret one, Supabase's direct or unflagged transaction-pooler URL), and logs warnings for optional ones (Resend, `APP_URL`, uploads on local disk). Render keeps the previous version running when a boot fails.
 
-If you created the service with **New → Web Service** instead of a Blueprint, `render.yaml` isn't applied, so nothing is generated for you. Set `AUTH_SECRET` yourself (`openssl rand -base64 32`), and use `npm run start:render` as the start command.
+Uploads go to Supabase Storage whenever `SUPABASE_URL` and `SUPABASE_SECRET_KEY` are set, and to `UPLOAD_DIR` on local disk otherwise (development and tests). Pages always link `/media/<key>`; in production that redirects to the file's public Supabase URL.
 
-Free-tier limits:
-- **Uploaded images are temporary.** There's no persistent disk, so uploads vanish on each deploy or restart. The CMS shows a warning banner. Text content lives in Postgres and is safe.
-- **Free Postgres expires after 30 days.**
-- **The site sleeps after 15 idle minutes**, so the first visit afterwards takes about a minute.
-
-To upgrade, follow the comment at the top of `render.yaml`: a Starter instance plus disk (about $7/month) and `basic-256mb` Postgres (about $6/month). Alternatively, move uploads to S3/R2 via `src/lib/storage.ts`.
+The free Render web service sleeps after 15 idle minutes, so the first visit afterwards takes about a minute. A free Supabase project pauses after a week without activity; upgrade it to Pro once people rely on the site.
 
 To use your emblem in production, commit it to `public/`.
 
@@ -91,7 +88,7 @@ A planet can also wrap a **globe texture** around itself instead of the generate
 
 `src/lib/worlds/` holds worlds described as data (world, system, planet, regions, records, characters, narratives). `npm run db:import-worlds` creates whatever is missing and never changes existing records, so CMS edits are safe; Render runs it on every boot. **Vespera Prime** (from the slow-grow-trainer project) is the first. Its globe uses that project's original planet texture (`public/textures/vespera-prime.jpg`; the project credits its environmental imagery to Yaro, Discord iyaro87). Its theatre artwork is not included pending the artist's permission.
 
-**Slow-grow campaign import.** `npm run db:import-slow-grow` reads a one-time export of the slow-grow-trainer campaign from `data/imports/slow-grow/` (git-ignored; never commit it) and adds it to Vespera Prime: each fought battle with a report becomes a draft **narrative** set in its theatre: the victor's TL;DR as the epigraph, each commander's account as a chapter, the deeds Campaign Command credited, and both warlords featured; the campaign's global events become published Events records; and the territory standings become each theatre's control snapshot (shown on the region page). An optional profiles export (`profiles.csv`, or Supabase's default `profiles_rows.csv`; only `id, commander_name, army_faction, army_subfaction, army_lore, crucible_datasheets` and the legacy `warlord_name` are read) names the commanders and adds their army chronicles, and each Crucible datasheet as a draft character (the first is the warlord, the rest champions) with an 11th edition statline and wargear. Each character records its commander (CMS only), and each battle features both commanders' warlords automatically; the CMS character picker can be searched by name or commander. Discord names in the export are ignored. Records are matched by `sourceRef`; a re-run updates only records nobody has edited since (`sourceHash`), and fills control only where none is set. To import into production, run it locally with `DATABASE_URL` set to the Render database's external URL. Lore records and narratives can also be linked to a region in the CMS, and are listed under "Chronicled here" on its page. Battle reports from an earlier version of the import (lore records) are removed on the next run unless they were edited.
+**Slow-grow campaign import.** `npm run db:import-slow-grow` reads a one-time export of the slow-grow-trainer campaign from `data/imports/slow-grow/` (git-ignored; never commit it) and adds it to Vespera Prime: each fought battle with a report becomes a draft **narrative** set in its theatre: the victor's TL;DR as the epigraph, each commander's account as a chapter, the deeds Campaign Command credited, and both warlords featured; the campaign's global events become published Events records; and the territory standings become each theatre's control snapshot (shown on the region page). An optional profiles export (`profiles.csv`, or Supabase's default `profiles_rows.csv`; only `id, commander_name, army_faction, army_subfaction, army_lore, crucible_datasheets` and the legacy `warlord_name` are read) names the commanders and adds their army chronicles, and each Crucible datasheet as a draft character (the first is the warlord, the rest champions) with an 11th edition statline and wargear. Each character records its commander (CMS only), and each battle features both commanders' warlords automatically; the CMS character picker can be searched by name or commander. Discord names in the export are ignored. Records are matched by `sourceRef`; a re-run updates only records nobody has edited since (`sourceHash`), and fills control only where none is set. To import into production, run it locally with `DATABASE_URL` set to the production (Supabase session pooler) URL. Lore records and narratives can also be linked to a region in the CMS, and are listed under "Chronicled here" on its page. Battle reports from an earlier version of the import (lore records) are removed on the next run unless they were edited.
 
 ## Star system themes
 

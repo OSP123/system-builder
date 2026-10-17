@@ -19,11 +19,16 @@ export function checkEnv(env: Env, nodeVersion: string = process.versions.node):
   // Database
   const db = val("DATABASE_URL");
   if (!db) {
-    errors.push(`DATABASE_URL is missing. Use your Postgres connection string (on Render: the database's Internal Database URL). ${WHERE}`);
+    errors.push(`DATABASE_URL is missing. Use your Postgres connection string (on Supabase: Connect → Session pooler). ${WHERE}`);
   } else if (!/^postgres(ql)?:\/\//.test(db)) {
     errors.push("DATABASE_URL must start with postgresql:// or postgres://.");
   } else if (production && /@(localhost|127\.0\.0\.1)[:/]/.test(db)) {
     errors.push("DATABASE_URL points at localhost, which only exists on your own machine. Use the hosted database's URL.");
+  }
+  if (/@db\.[a-z0-9]+\.supabase\.co[:/]/.test(db)) {
+    warnings.push("DATABASE_URL uses Supabase's direct connection, which is IPv6-only and unreachable from Render. Use the Session pooler string (Connect → Session pooler).");
+  } else if (/pooler\.supabase\.com:6543\//.test(db) && !/[?&]pgbouncer=true/.test(db)) {
+    errors.push("DATABASE_URL uses Supabase's transaction pooler (port 6543) without ?pgbouncer=true, which breaks Prisma. Use the Session pooler (port 5432) instead.");
   }
 
   // Sessions
@@ -64,6 +69,19 @@ export function checkEnv(env: Env, nodeVersion: string = process.versions.node):
   if (from) {
     const address = /<([^>]+)>\s*$/.exec(from)?.[1] ?? from;
     if (!EMAIL.test(address)) warnings.push('EMAIL_FROM should look like "Archivum <no-reply@yourdomain.com>".');
+  }
+
+  // Image uploads (Supabase Storage; otherwise local disk)
+  const storageKey = val("SUPABASE_SECRET_KEY");
+  const storageUrl = val("SUPABASE_URL");
+  if (storageKey.startsWith("sb_publishable_")) {
+    errors.push("SUPABASE_SECRET_KEY holds the publishable key. Use the secret key (Supabase: Project Settings → API Keys → Secret keys, starts with sb_secret_).");
+  } else if (storageKey && !storageUrl) {
+    errors.push("SUPABASE_SECRET_KEY is set but SUPABASE_URL is not (https://<project>.supabase.co).");
+  } else if (storageUrl && !/^https:\/\/[^\s/]+$/.test(storageUrl.replace(/\/+$/, ""))) {
+    errors.push("SUPABASE_URL must look like https://<project>.supabase.co.");
+  } else if (production && !storageKey) {
+    warnings.push("SUPABASE_SECRET_KEY is not set: uploaded images are stored on local disk, which Render wipes on every deploy.");
   }
 
   // Runtime

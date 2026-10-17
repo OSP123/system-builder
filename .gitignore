@@ -52,3 +52,6 @@ next-env.d.ts
 
 # Raw exports from other apps (players' writing, ids); never commit
 /data/imports/
+
+# Local credential notes; never commit
+cerulean-db-pass.txt

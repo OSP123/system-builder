@@ -226,3 +226,16 @@ Tasks:
 - Characters gain playedBy (migration 20261017000009), labelled "Commander" in the CMS and omitted from public queries. The slow-grow import fills it with the commander name the database already links to each warlord/champion (per user: not Discord names; discord_name is not read). Filled when missing even on hand-edited characters, never overwritten
 - CMS featured-character picker shows each character's commander and is searchable by name, title or commander (search appears with more than 8 characters)
 - Verified: 172 Vitest + Playwright
+
+
+Date: 2026-10-17
+Tasks:
+- Moved production data from Render's free Postgres (expiring) to Supabase (project zsarpmsktngowugdmcud, Postgres 17, session pooler). pg_dump 18 (Docker) from Render, single-transaction pg_restore into Supabase; all 13 tables match row for row, 10 migrations recorded, Prisma reports no drift. Backups kept outside the repo
+- Security: restored tables were readable and writable through Supabase's public Data API (anon/authenticated roles), including users' emails and password hashes. Migration 20261017000010 revokes those roles' access (now and by default) and enables RLS with no policies; verified the REST API returns permission denied. Exposure window was a few minutes before the fix
+- Uploads: Supabase Storage when SUPABASE_URL + SUPABASE_SECRET_KEY are set (public "media" bucket, created on boot by npm run storage:setup); /media/<key> redirects to the public URL. Local disk otherwise. Verified upload, public fetch (CORS *, 1-year cache) and delete against the real project
+- Env check: catches a publishable key in SUPABASE_SECRET_KEY, Supabase's IPv6-only direct URL, and the transaction pooler without pgbouncer=true
+- Verified: 179 Vitest + 11 Playwright
+Follow-ups:
+- User sets Render env: DATABASE_URL (Supabase session pooler), SUPABASE_URL, SUPABASE_SECRET_KEY; removes UPLOADS_EPHEMERAL. Then run the slow-grow import against Supabase
+- Delete the Render database once the live site is confirmed on Supabase (also retires its exposed password); remove RENDER_DATABASE_URL and SUPABASE_PROD_* from .env afterwards
+- Supabase free projects pause after a week idle; upgrade to Pro when people rely on the site
